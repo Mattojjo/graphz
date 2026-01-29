@@ -144,3 +144,114 @@
 .stat.loss .stat-value {
     color: #ff5252;
 }
+
+.holding-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.holding-actions .quantity-control {
+    flex-shrink: 0;
+}
+
+.holding-actions .quantity-control label {
+    display: block;
+    margin-bottom: 6px;
+    color: #888;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quantity-input-small {
+    display: grid;
+    grid-template-columns: 32px 50px 32px;
+    gap: 6px;
+    min-width: 0;
+}
+
+.qty-btn-small {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qty-btn-small:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.quantity-input-small input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    text-align: center;
+    font-weight: 600;
+    min-width: 0;
+    width: 50px;
+}
+
+.quantity-input-small input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 0;
+}
+
+.action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.buy-btn {
+    background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
+    color: #fff;
+}
+
+.buy-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+}
+
+.sell-btn {
+    background: linear-gradient(135deg, #ff5252 0%, #ff1744 100%);
+    color: #fff;
+}
+
+.sell-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3);
+}

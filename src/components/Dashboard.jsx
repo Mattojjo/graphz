@@ -9,7 +9,7 @@ const Dashboard = () => {
     return (
         <div className="dashboard">
             <header className="dashboard-header">
-                <h1>📈 GraphZ Trading Platform</h1>
+                <h1>GraphZ Trading Platform</h1>
                 <p className="tagline">Live Market Simulation</p>
             </header>
 
