@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
 import './TradePanel.css';
 
-const TradePanel = () => {
-    const {
-        selectedStock,
-        cash,
-        buyStock,
-        sellStock,
-        getHoldingQuantity
-    } = useTradingContext();
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+    }).format(value);
+};
 
+const TradePanel = () => {
+    const { selectedStock, cash, buyStock, sellStock, getHoldingQuantity } = useTradingContext();
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('buy');
 
@@ -27,27 +27,20 @@ const TradePanel = () => {
     const canAfford = cash >= totalCost;
     const canSell = currentHolding >= quantity;
 
-    const handleBuy = () => {
-        if (buyStock(selectedStock.symbol, quantity)) {
-            setQuantity(1);
-        }
+    const handleTrade = () => {
+        const success = activeTab === 'buy'
+            ? buyStock(selectedStock.symbol, quantity)
+            : sellStock(selectedStock.symbol, quantity);
+        if (success) setQuantity(1);
     };
 
-    const handleSell = () => {
-        if (sellStock(selectedStock.symbol, quantity)) {
-            setQuantity(1);
-        }
+    const updateQuantity = (delta) => {
+        setQuantity(prev => Math.max(1, prev + delta));
     };
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(value);
+    const handleQuantityChange = (e) => {
+        setQuantity(Math.max(1, parseInt(e.target.value) || 1));
     };
-
-    const incrementQuantity = () => setQuantity(prev => prev + 1);
-    const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
 
     return (
         <div className="trade-panel">
@@ -82,14 +75,14 @@ const TradePanel = () => {
                 <div className="quantity-control">
                     <label>Quantity</label>
                     <div className="quantity-input">
-                        <button onClick={decrementQuantity} className="qty-btn">-</button>
+                        <button onClick={() => updateQuantity(-1)} className="qty-btn">-</button>
                         <input
                             type="number"
                             value={quantity}
-                            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                            onChange={handleQuantityChange}
                             min="1"
                         />
-                        <button onClick={incrementQuantity} className="qty-btn">+</button>
+                        <button onClick={() => updateQuantity(1)} className="qty-btn">+</button>
                     </div>
                 </div>
 
@@ -98,37 +91,23 @@ const TradePanel = () => {
                         <span>Total:</span>
                         <span className="total">{formatCurrency(totalCost)}</span>
                     </div>
-                    {activeTab === 'buy' && (
-                        <div className="summary-row">
-                            <span>Available Cash:</span>
-                            <span className={canAfford ? '' : 'insufficient'}>{formatCurrency(cash)}</span>
-                        </div>
-                    )}
-                    {activeTab === 'sell' && (
-                        <div className="summary-row">
-                            <span>Owned Shares:</span>
-                            <span className={canSell ? '' : 'insufficient'}>{currentHolding}</span>
-                        </div>
-                    )}
+                    <div className="summary-row">
+                        <span>{activeTab === 'buy' ? 'Available Cash:' : 'Owned Shares:'}</span>
+                        <span className={(activeTab === 'buy' ? canAfford : canSell) ? '' : 'insufficient'}>
+                            {activeTab === 'buy' ? formatCurrency(cash) : currentHolding}
+                        </span>
+                    </div>
                 </div>
 
-                {activeTab === 'buy' ? (
-                    <button
-                        className="trade-button buy-button"
-                        onClick={handleBuy}
-                        disabled={!canAfford}
-                    >
-                        {canAfford ? `Buy ${quantity} Share${quantity > 1 ? 's' : ''}` : 'Insufficient Funds'}
-                    </button>
-                ) : (
-                    <button
-                        className="trade-button sell-button"
-                        onClick={handleSell}
-                        disabled={!canSell}
-                    >
-                        {canSell ? `Sell ${quantity} Share${quantity > 1 ? 's' : ''}` : 'Insufficient Shares'}
-                    </button>
-                )}
+                <button
+                    className={`trade-button ${activeTab}-button`}
+                    onClick={handleTrade}
+                    disabled={activeTab === 'buy' ? !canAfford : !canSell}
+                >
+                    {activeTab === 'buy'
+                        ? (canAfford ? `Buy ${quantity} Share${quantity > 1 ? 's' : ''}` : 'Insufficient Funds')
+                        : (canSell ? `Sell ${quantity} Share${quantity > 1 ? 's' : ''}` : 'Insufficient Shares')}
+                </button>
             </div>
         </div>
     );

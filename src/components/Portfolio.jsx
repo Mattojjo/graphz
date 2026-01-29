@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
 import './Portfolio.css';
 
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+    }).format(value);
+};
+
+const formatPercent = (value) => `${value.toFixed(2)}%`;
+
 const Portfolio = () => {
     const {
         cash,
@@ -11,7 +20,6 @@ const Portfolio = () => {
         sellStock,
         getPortfolioValue,
         getTotalValue,
-        getInitialValue,
         getTotalProfitLoss,
         getTotalProfitLossPercent,
     } = useTradingContext();
@@ -23,46 +31,17 @@ const Portfolio = () => {
     const profitLoss = getTotalProfitLoss();
     const profitLossPercent = getTotalProfitLossPercent();
 
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(value);
-    };
-
-    const formatPercent = (value) => {
-        return value.toFixed(2) + '%';
-    };
-
     const getQuantity = (symbol) => quantities[symbol] || 1;
 
-    const setQuantity = (symbol, value) => {
-        setQuantities(prev => ({
-            ...prev,
-            [symbol]: Math.max(1, parseInt(value) || 1)
-        }));
+    const updateQuantity = (symbol, value) => {
+        const newValue = typeof value === 'number' ? value : parseInt(value) || 1;
+        setQuantities(prev => ({ ...prev, [symbol]: Math.max(1, newValue) }));
     };
 
-    const incrementQuantity = (symbol) => {
-        setQuantity(symbol, getQuantity(symbol) + 1);
-    };
-
-    const decrementQuantity = (symbol) => {
-        setQuantity(symbol, getQuantity(symbol) - 1);
-    };
-
-    const handleBuy = (symbol) => {
+    const handleTrade = (symbol, isBuy) => {
         const quantity = getQuantity(symbol);
-        if (buyStock(symbol, quantity)) {
-            setQuantities(prev => ({ ...prev, [symbol]: 1 }));
-        }
-    };
-
-    const handleSell = (symbol) => {
-        const quantity = getQuantity(symbol);
-        if (sellStock(symbol, quantity)) {
-            setQuantities(prev => ({ ...prev, [symbol]: 1 }));
-        }
+        const success = isBuy ? buyStock(symbol, quantity) : sellStock(symbol, quantity);
+        if (success) setQuantities(prev => ({ ...prev, [symbol]: 1 }));
     };
 
     return (
@@ -148,7 +127,7 @@ const Portfolio = () => {
                                             <label>Qty</label>
                                             <div className="quantity-input-small">
                                                 <button
-                                                    onClick={() => decrementQuantity(holding.symbol)}
+                                                    onClick={() => updateQuantity(holding.symbol, quantity - 1)}
                                                     className="qty-btn-small"
                                                 >
                                                     -
@@ -156,11 +135,11 @@ const Portfolio = () => {
                                                 <input
                                                     type="number"
                                                     value={quantity}
-                                                    onChange={(e) => setQuantity(holding.symbol, e.target.value)}
+                                                    onChange={(e) => updateQuantity(holding.symbol, e.target.value)}
                                                     min="1"
                                                 />
                                                 <button
-                                                    onClick={() => incrementQuantity(holding.symbol)}
+                                                    onClick={() => updateQuantity(holding.symbol, quantity + 1)}
                                                     className="qty-btn-small"
                                                 >
                                                     +
@@ -170,7 +149,7 @@ const Portfolio = () => {
                                         <div className="action-buttons">
                                             <button
                                                 className="action-btn buy-btn"
-                                                onClick={() => handleBuy(holding.symbol)}
+                                                onClick={() => handleTrade(holding.symbol, true)}
                                                 disabled={!canAffordBuy}
                                                 title={!canAffordBuy ? 'Insufficient funds' : `Buy ${quantity} share${quantity > 1 ? 's' : ''}`}
                                             >
@@ -178,7 +157,7 @@ const Portfolio = () => {
                                             </button>
                                             <button
                                                 className="action-btn sell-btn"
-                                                onClick={() => handleSell(holding.symbol)}
+                                                onClick={() => handleTrade(holding.symbol, false)}
                                                 disabled={!canSell}
                                                 title={!canSell ? 'Insufficient shares' : `Sell ${quantity} share${quantity > 1 ? 's' : ''}`}
                                             >

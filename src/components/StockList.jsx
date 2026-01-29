@@ -1,20 +1,20 @@
 import { useTradingContext } from '../context/TradingContext';
 import './StockList.css';
 
+const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+    }).format(value);
+};
+
+const formatPercent = (value) => {
+    const sign = value >= 0 ? '+' : '';
+    return `${sign}${value.toFixed(2)}%`;
+};
+
 const StockList = () => {
     const { stocks, selectedStock, setSelectedStock } = useTradingContext();
-
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(value);
-    };
-
-    const formatPercent = (value) => {
-        const sign = value >= 0 ? '+' : '';
-        return sign + value.toFixed(2) + '%';
-    };
 
     return (
         <div className="stock-list">

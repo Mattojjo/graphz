@@ -12,6 +12,10 @@ import {
 
 const TradingContext = createContext();
 
+const PRICE_UPDATE_INTERVAL = 2000;
+const MAX_TRANSACTIONS = 50;
+const NOTIFICATION_DURATION = 3000;
+
 export const useTradingContext = () => {
     const context = useContext(TradingContext);
     if (!context) {
@@ -37,10 +41,28 @@ export const TradingProvider = ({ children }) => {
     useEffect(() => {
         const interval = setInterval(() => {
             setStocks(prevStocks => prevStocks.map(updateStockPrice));
-        }, 2000);
+        }, PRICE_UPDATE_INTERVAL);
 
         return () => clearInterval(interval);
     }, []);
+
+    const createTransaction = (type, symbol, quantity, price, total) => ({
+        type,
+        symbol,
+        quantity,
+        price,
+        total,
+        timestamp: Date.now(),
+    });
+
+    const addTransaction = (transaction) => {
+        setTransactions(prev => [transaction, ...prev].slice(0, MAX_TRANSACTIONS));
+    };
+
+    const showNotification = (message, type = 'info') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), NOTIFICATION_DURATION);
+    };
 
     const buyStock = (symbol, quantity) => {
         const stock = stocks.find(s => s.symbol === symbol);
@@ -53,16 +75,7 @@ export const TradingProvider = ({ children }) => {
 
         setHoldings(prev => buyStockUtil(prev, symbol, stock.currentPrice, quantity));
         setCash(prev => prev - totalCost);
-
-        addTransaction({
-            type: 'BUY',
-            symbol,
-            quantity,
-            price: stock.currentPrice,
-            total: totalCost,
-            timestamp: Date.now(),
-        });
-
+        addTransaction(createTransaction('BUY', symbol, quantity, stock.currentPrice, totalCost));
         showNotification(`Bought ${quantity} shares of ${symbol}`, 'success');
         return true;
     };
@@ -79,34 +92,10 @@ export const TradingProvider = ({ children }) => {
         const totalValue = stock.currentPrice * quantity;
         setHoldings(prev => sellStockUtil(prev, symbol, quantity));
         setCash(prev => prev + totalValue);
-
-        addTransaction({
-            type: 'SELL',
-            symbol,
-            quantity,
-            price: stock.currentPrice,
-            total: totalValue,
-            timestamp: Date.now(),
-        });
-
+        addTransaction(createTransaction('SELL', symbol, quantity, stock.currentPrice, totalValue));
         showNotification(`Sold ${quantity} shares of ${symbol}`, 'success');
         return true;
     };
-
-    const addTransaction = (transaction) => {
-        setTransactions(prev => [transaction, ...prev].slice(0, 50)); // Keep last 50 transactions
-    };
-
-    const showNotification = (message, type = 'info') => {
-        setNotification({ message, type });
-        setTimeout(() => setNotification(null), 3000);
-    };
-
-    const getPortfolioValue = () => calculatePortfolioValue(holdings, stocks);
-    const getTotalValue = () => calculateTotalValue(cash, holdings, stocks);
-    const getInitialValue = () => INITIAL_CASH;
-    const getTotalProfitLoss = () => getTotalValue() - getInitialValue();
-    const getTotalProfitLossPercent = () => (getTotalProfitLoss() / getInitialValue()) * 100;
 
     const value = {
         stocks,
@@ -118,11 +107,11 @@ export const TradingProvider = ({ children }) => {
         notification,
         buyStock,
         sellStock,
-        getPortfolioValue,
-        getTotalValue,
-        getInitialValue,
-        getTotalProfitLoss,
-        getTotalProfitLossPercent,
+        getPortfolioValue: () => calculatePortfolioValue(holdings, stocks),
+        getTotalValue: () => calculateTotalValue(cash, holdings, stocks),
+        getInitialValue: () => INITIAL_CASH,
+        getTotalProfitLoss: () => calculateTotalValue(cash, holdings, stocks) - INITIAL_CASH,
+        getTotalProfitLossPercent: () => ((calculateTotalValue(cash, holdings, stocks) - INITIAL_CASH) / INITIAL_CASH) * 100,
         getHoldingQuantity: (symbol) => getHoldingQuantity(holdings, symbol),
     };
 
