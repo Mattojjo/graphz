@@ -1,20 +1,44 @@
-# graphz
 
-## React + Vite
+<img width="3166" height="2574" alt="Screenshot 2026-01-29 at 16-02-16 graphz" src="https://github.com/user-attachments/assets/928c569e-7f44-4e2a-9047-82922d899b3e" />
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# GraphZ Trading Platform
 
-Currently, two official plugins are available:
+A real-time day trading simulator built with React featuring candlestick charts, portfolio management, and mocked market data.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- **Professional Candlestick Charts** - OHLC data with volume bars and 20-period moving average
+- **Real-time Updates** - Stock prices update every 2 seconds with realistic volatility
+- **Portfolio Management** - Track holdings, profit/loss, and total account value
+- **Quick Trading** - Buy/sell directly from stock list or portfolio holdings
+- **Interactive Charts** - Hover for detailed OHLC data with crosshair and price tags
+- **10 Mock Stocks** - AAPL, GOOGL, MSFT, AMZN, TSLA, META, NVDA, NFLX, AMD, INTC
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Tech Stack
 
-Note: This will impact Vite dev & build performances.
+- React 18 + Vite
+- Context API for state management
+- Canvas API for chart rendering
+- CSS with minimalist dark theme
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+# Install dependencies
+pnpm install
+
+# Start dev server
+pnpm dev
+```
+
+## Usage
+
+1. Select a stock from the left sidebar
+2. View real-time candlestick chart with volume
+3. Enter quantity and buy/sell shares
+4. Monitor your portfolio and P/L in real-time
+5. Trade directly from portfolio holdings
+
+## Starting Balance
+
+$100,000 - Use it wisely!
