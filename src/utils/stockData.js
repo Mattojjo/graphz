@@ -31,12 +31,28 @@ export const generateHistoricalData = (basePrice, points = 100) => {
 
     for (let i = points; i >= 0; i--) {
         const timestamp = now - (i * 60000); // 1 minute intervals
+
+        // Generate OHLC data for candlestick charts
+        const open = price;
+        const volatility = basePrice * 0.003;
+        const high = open + Math.random() * volatility;
+        const low = open - Math.random() * volatility;
+        const close = low + Math.random() * (high - low);
+
+        // Generate volume (random but realistic)
+        const volume = Math.floor(Math.random() * 1000000) + 500000;
+
         data.push({
             timestamp,
-            price: price,
-            time: new Date(timestamp).toLocaleTimeString(),
+            price: close, // Keep for backwards compatibility
+            open,
+            high,
+            low,
+            close,
+            volume,
+            time: new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
         });
-        price = generatePriceMovement(price, 0.015);
+        price = generatePriceMovement(close, 0.015);
     }
 
     return data;
@@ -56,15 +72,27 @@ export const initializeStocks = () => {
 
 // Update stock prices
 export const updateStockPrice = (stock) => {
-    const newPrice = generatePriceMovement(stock.currentPrice);
+    const lastData = stock.historicalData[stock.historicalData.length - 1];
+    const open = lastData.close;
+    const volatility = stock.basePrice * 0.003;
+    const high = open + Math.random() * volatility;
+    const low = open - Math.random() * volatility;
+    const close = low + Math.random() * (high - low);
+
+    const newPrice = close;
     const change = newPrice - stock.basePrice;
     const changePercent = ((newPrice - stock.basePrice) / stock.basePrice) * 100;
 
     // Update historical data
     const newHistoricalData = [...stock.historicalData.slice(1), {
         timestamp: Date.now(),
-        price: newPrice,
-        time: new Date().toLocaleTimeString(),
+        price: close,
+        open,
+        high,
+        low,
+        close,
+        volume: Math.floor(Math.random() * 1000000) + 500000,
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     }];
 
     return {

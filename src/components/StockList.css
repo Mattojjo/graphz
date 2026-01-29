@@ -16,8 +16,9 @@
 
 .stock-list h2 {
     margin: 0 0 20px 0;
-    font-size: 1.5rem;
-    color: #fff;
+    font-size: 1.1rem;
+    color: #ccc;
+    font-weight: 500;
     position: sticky;
     top: 0;
     background: rgba(255, 255, 255, 0.03);
@@ -72,38 +73,38 @@
 }
 
 .stock-symbol {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #fff;
+    color: #e0e0e0;
 }
 
 .stock-name {
-    font-size: 0.8rem;
-    color: #888;
+    font-size: 0.7rem;
+    color: #777;
     margin-top: 2px;
 }
 
 .stock-change {
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 4px 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 3px 6px;
     border-radius: 4px;
 }
 
 .stock-change.positive {
-    color: #00c853;
-    background: rgba(0, 200, 83, 0.1);
+    color: #5fb878;
+    background: rgba(95, 184, 120, 0.12);
 }
 
 .stock-change.negative {
-    color: #ff5252;
-    background: rgba(255, 82, 82, 0.1);
+    color: #e4726f;
+    background: rgba(228, 114, 111, 0.12);
 }
 
 .stock-price {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #fff;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #e0e0e0;
 }
 
 /* Custom scrollbar */

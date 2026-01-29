@@ -26,102 +26,184 @@ const StockChart = () => {
         ctx.clearRect(0, 0, width, height);
 
         // Calculate scales
-        const prices = data.map(d => d.price);
-        const minPrice = Math.min(...prices);
-        const maxPrice = Math.max(...prices);
+        const highs = data.map(d => d.high);
+        const lows = data.map(d => d.low);
+        const volumes = data.map(d => d.volume);
+        const minPrice = Math.min(...lows);
+        const maxPrice = Math.max(...highs);
         const priceRange = maxPrice - minPrice || 1;
+        const maxVolume = Math.max(...volumes);
 
-        const padding = { top: 20, right: 60, bottom: 30, left: 10 };
+        const padding = { top: 10, right: 70, bottom: 80, left: 50 };
+        const volumeHeight = 60;
+        const chartHeight = height - padding.top - padding.bottom - volumeHeight;
         const chartWidth = width - padding.left - padding.right;
-        const chartHeight = height - padding.top - padding.bottom;
 
-        const xScale = chartWidth / (data.length - 1);
+        const candleWidth = Math.max(2, Math.min(12, chartWidth / data.length - 2));
+        const xScale = chartWidth / data.length;
         const yScale = chartHeight / priceRange;
 
-        // Draw grid lines
-        ctx.strokeStyle = '#2a2a2a';
-        ctx.lineWidth = 1;
+        // Draw background
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, width, height);
 
-        for (let i = 0; i <= 5; i++) {
-            const y = padding.top + (chartHeight / 5) * i;
+        // Draw horizontal grid lines
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 1;
+        const gridLines = 8;
+
+        for (let i = 0; i <= gridLines; i++) {
+            const y = padding.top + (chartHeight / gridLines) * i;
             ctx.beginPath();
             ctx.moveTo(padding.left, y);
             ctx.lineTo(width - padding.right, y);
             ctx.stroke();
 
             // Price labels
-            const price = maxPrice - (priceRange / 5) * i;
-            ctx.fillStyle = '#888';
-            ctx.font = '12px monospace';
-            ctx.textAlign = 'left';
-            ctx.fillText(`$${price.toFixed(2)}`, width - padding.right + 5, y + 4);
+            const price = maxPrice - (priceRange / gridLines) * i;
+            ctx.fillStyle = '#666';
+            ctx.font = '11px "SF Mono", Consolas, monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText(price.toFixed(2), padding.left - 8, y + 3);
         }
 
-        // Draw gradient area under line
-        const gradient = ctx.createLinearGradient(0, padding.top, 0, height - padding.bottom);
+        // Draw vertical grid lines and time labels
+        const timeInterval = Math.max(1, Math.floor(data.length / 10));
+        for (let i = 0; i < data.length; i += timeInterval) {
+            const x = padding.left + i * xScale + candleWidth / 2;
 
-        const basePrice = selectedStock.basePrice;
-        const currentPrice = data[data.length - 1].price;
-        const isPositive = currentPrice >= basePrice;
+            ctx.strokeStyle = '#1a1a1a';
+            ctx.beginPath();
+            ctx.moveTo(x, padding.top);
+            ctx.lineTo(x, padding.top + chartHeight);
+            ctx.stroke();
 
-        if (isPositive) {
-            gradient.addColorStop(0, 'rgba(0, 200, 83, 0.3)');
-            gradient.addColorStop(1, 'rgba(0, 200, 83, 0.02)');
-        } else {
-            gradient.addColorStop(0, 'rgba(255, 82, 82, 0.3)');
-            gradient.addColorStop(1, 'rgba(255, 82, 82, 0.02)');
+            // Time labels
+            ctx.fillStyle = '#666';
+            ctx.font = '10px "SF Mono", Consolas, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(data[i].time, x, height - volumeHeight - 5);
         }
 
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.moveTo(padding.left, height - padding.bottom);
-
-        data.forEach((point, i) => {
-            const x = padding.left + i * xScale;
-            const y = padding.top + chartHeight - (point.price - minPrice) * yScale;
-
-            if (i === 0) {
-                ctx.lineTo(x, y);
+        // Calculate moving average (20-period SMA)
+        const ma20 = [];
+        for (let i = 0; i < data.length; i++) {
+            if (i < 19) {
+                ma20.push(null);
             } else {
-                ctx.lineTo(x, y);
+                const sum = data.slice(i - 19, i + 1).reduce((acc, d) => acc + d.close, 0);
+                ma20.push(sum / 20);
+            }
+        }
+
+        // Draw moving average line
+        ctx.strokeStyle = '#8b9dc3';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        let maStarted = false;
+        data.forEach((point, i) => {
+            if (ma20[i] !== null) {
+                const x = padding.left + i * xScale + candleWidth / 2;
+                const y = padding.top + chartHeight - (ma20[i] - minPrice) * yScale;
+                if (!maStarted) {
+                    ctx.moveTo(x, y);
+                    maStarted = true;
+                } else {
+                    ctx.lineTo(x, y);
+                }
             }
         });
-
-        ctx.lineTo(padding.left + (data.length - 1) * xScale, height - padding.bottom);
-        ctx.closePath();
-        ctx.fill();
-
-        // Draw line
-        ctx.strokeStyle = isPositive ? '#00c853' : '#ff5252';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-
-        data.forEach((point, i) => {
-            const x = padding.left + i * xScale;
-            const y = padding.top + chartHeight - (point.price - minPrice) * yScale;
-
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        });
-
         ctx.stroke();
 
-        // Draw points on hover
-        if (hoveredPoint !== null && data[hoveredPoint]) {
-            const x = padding.left + hoveredPoint * xScale;
-            const y = padding.top + chartHeight - (data[hoveredPoint].price - minPrice) * yScale;
+        // Draw candlesticks
+        data.forEach((candle, i) => {
+            const x = padding.left + i * xScale;
+            const centerX = x + candleWidth / 2;
 
-            ctx.fillStyle = isPositive ? '#00c853' : '#ff5252';
+            const openY = padding.top + chartHeight - (candle.open - minPrice) * yScale;
+            const closeY = padding.top + chartHeight - (candle.close - minPrice) * yScale;
+            const highY = padding.top + chartHeight - (candle.high - minPrice) * yScale;
+            const lowY = padding.top + chartHeight - (candle.low - minPrice) * yScale;
+
+            const isGreen = candle.close >= candle.open;
+            const color = isGreen ? '#26a69a' : '#ef5350';
+
+            // Draw wick
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.arc(x, y, 5, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
+            ctx.moveTo(centerX, highY);
+            ctx.lineTo(centerX, lowY);
             ctx.stroke();
+
+            // Draw body
+            const bodyHeight = Math.abs(closeY - openY) || 1;
+            const bodyY = Math.min(openY, closeY);
+
+            if (isGreen) {
+                ctx.fillStyle = color;
+                ctx.fillRect(x + 1, bodyY, candleWidth - 2, bodyHeight);
+            } else {
+                ctx.fillStyle = color;
+                ctx.fillRect(x + 1, bodyY, candleWidth - 2, bodyHeight);
+            }
+
+            // Highlight hovered candle
+            if (hoveredPoint === i) {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(x, bodyY - 1, candleWidth, bodyHeight + 2);
+            }
+        });
+
+        // Draw volume bars
+        const volumeY = height - volumeHeight - 10;
+        data.forEach((candle, i) => {
+            const x = padding.left + i * xScale;
+            const barHeight = (candle.volume / maxVolume) * (volumeHeight - 10);
+            const isGreen = candle.close >= candle.open;
+
+            ctx.fillStyle = isGreen ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)';
+            ctx.fillRect(x + 1, volumeY - barHeight, candleWidth - 2, barHeight);
+        });
+
+        // Volume label
+        ctx.fillStyle = '#666';
+        ctx.font = '10px "SF Mono", Consolas, monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('Volume', padding.left, volumeY - volumeHeight + 15);
+
+        // Crosshair on hover
+        if (hoveredPoint !== null && data[hoveredPoint]) {
+            const candle = data[hoveredPoint];
+            const x = padding.left + hoveredPoint * xScale + candleWidth / 2;
+            const y = padding.top + chartHeight - (candle.close - minPrice) * yScale;
+
+            // Vertical line
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(x, padding.top);
+            ctx.lineTo(x, padding.top + chartHeight);
+            ctx.stroke();
+
+            // Horizontal line
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(width - padding.right, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Price tag on right axis
+            const priceText = candle.close.toFixed(2);
+            const textWidth = ctx.measureText(priceText).width;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(width - padding.right + 2, y - 10, textWidth + 10, 20);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 11px "SF Mono", Consolas, monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(priceText, width - padding.right + 7, y + 4);
         }
 
     }, [selectedStock, hoveredPoint]);
@@ -163,25 +245,53 @@ const StockChart = () => {
         }).format(value);
     };
 
+    const formatVolume = (value) => {
+        if (value >= 1000000) {
+            return (value / 1000000).toFixed(2) + 'M';
+        } else if (value >= 1000) {
+            return (value / 1000).toFixed(1) + 'K';
+        }
+        return value.toString();
+    };
+
     const currentData = selectedStock.historicalData[selectedStock.historicalData.length - 1];
     const hoveredData = hoveredPoint !== null ? selectedStock.historicalData[hoveredPoint] : null;
 
     return (
-        <div className="stock-chart">
-            <div className="chart-header">
+        <>
+            <div className="chart-header-section">
                 <div className="chart-title">
                     <h2>{selectedStock.symbol}</h2>
                     <span className="stock-name">{selectedStock.name}</span>
                 </div>
                 <div className="chart-info">
                     {hoveredData ? (
-                        <>
-                            <div className="price-display">{formatCurrency(hoveredData.price)}</div>
+                        <div className="ohlc-data">
+                            <div className="ohlc-item">
+                                <span className="ohlc-label">O</span>
+                                <span className="ohlc-value">{formatCurrency(hoveredData.open)}</span>
+                            </div>
+                            <div className="ohlc-item">
+                                <span className="ohlc-label">H</span>
+                                <span className="ohlc-value">{formatCurrency(hoveredData.high)}</span>
+                            </div>
+                            <div className="ohlc-item">
+                                <span className="ohlc-label">L</span>
+                                <span className="ohlc-value">{formatCurrency(hoveredData.low)}</span>
+                            </div>
+                            <div className="ohlc-item">
+                                <span className="ohlc-label">C</span>
+                                <span className="ohlc-value">{formatCurrency(hoveredData.close)}</span>
+                            </div>
+                            <div className="ohlc-item">
+                                <span className="ohlc-label">Vol</span>
+                                <span className="ohlc-value">{formatVolume(hoveredData.volume)}</span>
+                            </div>
                             <div className="time-display">{hoveredData.time}</div>
-                        </>
+                        </div>
                     ) : (
                         <>
-                            <div className="price-display">{formatCurrency(currentData.price)}</div>
+                            <div className="price-display">{formatCurrency(currentData.close)}</div>
                             <div className={`change-display ${selectedStock.changePercent >= 0 ? 'positive' : 'negative'}`}>
                                 {selectedStock.changePercent >= 0 ? '+' : ''}{selectedStock.changePercent.toFixed(2)}%
                             </div>
@@ -189,15 +299,17 @@ const StockChart = () => {
                     )}
                 </div>
             </div>
-            <div className="chart-container">
-                <canvas
-                    ref={canvasRef}
-                    className="chart-canvas"
-                    onMouseMove={handleMouseMove}
-                    onMouseLeave={handleMouseLeave}
-                />
+            <div className="stock-chart">
+                <div className="chart-container">
+                    <canvas
+                        ref={canvasRef}
+                        className="chart-canvas"
+                        onMouseMove={handleMouseMove}
+                        onMouseLeave={handleMouseLeave}
+                    />
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 

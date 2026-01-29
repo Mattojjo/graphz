@@ -14,8 +14,9 @@
 
 .trade-panel h2 {
     margin: 0 0 20px 0;
-    font-size: 1.5rem;
-    color: #fff;
+    font-size: 1.1rem;
+    color: #ccc;
+    font-weight: 500;
 }
 
 .no-selection {
@@ -37,13 +38,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 0;
-    color: #ccc;
+    color: #999;
+    font-size: 0.85rem;
 }
 
 .info-row .price {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #fff;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #e0e0e0;
 }
 
 .trade-tabs {
@@ -54,14 +56,14 @@
 }
 
 .tab {
-    padding: 12px;
+    padding: 10px;
     border: 2px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    color: #ccc;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 500;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
@@ -94,15 +96,15 @@
 }
 
 .tab.active {
-    background: rgba(102, 126, 234, 0.3);
-    border-color: #667eea;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3), inset 0 0 20px rgba(102, 126, 234, 0.1);
+    background: rgba(139, 157, 195, 0.2);
+    border-color: #8b9dc3;
+    box-shadow: 0 4px 12px rgba(139, 157, 195, 0.2), inset 0 0 20px rgba(139, 157, 195, 0.08);
 }
 
 .tab.active:hover {
-    background: rgba(102, 126, 234, 0.4);
-    border-color: #764ba2;
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4), inset 0 0 30px rgba(102, 126, 234, 0.15);
+    background: rgba(139, 157, 195, 0.25);
+    border-color: #9b8fb5;
+    box-shadow: 0 6px 16px rgba(139, 157, 195, 0.25), inset 0 0 30px rgba(139, 157, 195, 0.1);
 }
 
 .trade-form {
@@ -155,12 +157,12 @@
 .quantity-input input {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
+    color: #e0e0e0;
     padding: 10px;
     border-radius: 6px;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     text-align: center;
-    font-weight: 600;
+    font-weight: 500;
     min-width: 0;
     transition: all 0.3s ease;
 }
@@ -172,9 +174,9 @@
 
 .quantity-input input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #8b9dc3;
     background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2), 0 0 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 0 3px rgba(139, 157, 195, 0.15), 0 0 20px rgba(139, 157, 195, 0.2);
     transform: scale(1.02);
 }
 
@@ -188,30 +190,31 @@
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
-    color: #ccc;
+    color: #999;
+    font-size: 0.85rem;
 }
 
 .summary-row .total {
-    font-size: 1.3rem;
-    font-weight: 600;
-    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #e0e0e0;
 }
 
 .summary-row .insufficient {
-    color: #ff5252;
-    font-weight: 600;
+    color: #e4726f;
+    font-weight: 500;
 }
 
 .trade-button {
-    padding: 15px;
+    padding: 14px;
     border: none;
     border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 0.9rem;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
     position: relative;
     overflow: hidden;
 }
@@ -224,7 +227,7 @@
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.25);
     transform: translate(-50%, -50%);
     transition: width 0.6s, height 0.6s;
 }
@@ -235,13 +238,13 @@
 }
 
 .buy-button {
-    background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
+    background: linear-gradient(135deg, #5fb878 0%, #6ec282 100%);
     color: #fff;
 }
 
 .buy-button:hover:not(:disabled) {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(0, 200, 83, 0.4), 0 0 40px rgba(0, 200, 83, 0.2);
+    box-shadow: 0 6px 20px rgba(95, 184, 120, 0.25), 0 0 30px rgba(95, 184, 120, 0.12);
 }
 
 .buy-button:active:not(:disabled) {
@@ -249,13 +252,13 @@
 }
 
 .sell-button {
-    background: linear-gradient(135deg, #ff5252 0%, #ff1744 100%);
+    background: linear-gradient(135deg, #e4726f 0%, #e88683 100%);
     color: #fff;
 }
 
 .sell-button:hover:not(:disabled) {
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 8px 24px rgba(255, 82, 82, 0.4), 0 0 40px rgba(255, 82, 82, 0.2);
+    box-shadow: 0 6px 20px rgba(228, 114, 111, 0.25), 0 0 30px rgba(228, 114, 111, 0.12);
 }
 
 .sell-button:active:not(:disabled) {

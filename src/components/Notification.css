@@ -2,13 +2,21 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    padding: 15px 25px;
+    padding: 12px 20px;
     border-radius: 8px;
-    font-weight: 600;
+    font-weight: 500;
+    font-size: 0.85rem;
     z-index: 1000;
     animation: slideIn 0.3s ease;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08);
     border: 1px solid;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.notification:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 @keyframes slideIn {
@@ -24,19 +32,31 @@
 }
 
 .notification.success {
-    background: rgba(0, 200, 83, 0.9);
+    background: linear-gradient(135deg, rgba(95, 184, 120, 0.92) 0%, rgba(110, 194, 130, 0.92) 100%);
     color: #fff;
-    border-color: #00e676;
+    border-color: #6ec282;
+}
+
+.notification.success:hover {
+    box-shadow: 0 10px 32px rgba(95, 184, 120, 0.35), 0 0 30px rgba(95, 184, 120, 0.2);
 }
 
 .notification.error {
-    background: rgba(255, 82, 82, 0.9);
+    background: linear-gradient(135deg, rgba(228, 114, 111, 0.92) 0%, rgba(232, 134, 131, 0.92) 100%);
     color: #fff;
-    border-color: #ff1744;
+    border-color: #e88683;
+}
+
+.notification.error:hover {
+    box-shadow: 0 10px 32px rgba(228, 114, 111, 0.35), 0 0 30px rgba(228, 114, 111, 0.2);
 }
 
 .notification.info {
-    background: rgba(102, 126, 234, 0.9);
+    background: linear-gradient(135deg, rgba(139, 157, 195, 0.92) 0%, rgba(155, 143, 181, 0.92) 100%);
     color: #fff;
-    border-color: #764ba2;
+    border-color: #9b8fb5;
+}
+
+.notification.info:hover {
+    box-shadow: 0 10px 32px rgba(139, 157, 195, 0.35), 0 0 30px rgba(139, 157, 195, 0.2);
 }
