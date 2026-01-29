@@ -5,6 +5,13 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     min-width: 0;
     overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.portfolio:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .portfolio h2 {
@@ -31,6 +38,40 @@
     gap: 8px;
     min-width: 0;
     overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: default;
+    position: relative;
+}
+
+.summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.summary-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+.summary-card:hover::before {
+    opacity: 1;
+}
+
+.summary-card.profit:hover {
+    box-shadow: 0 8px 20px rgba(0, 200, 83, 0.2), 0 0 30px rgba(0, 200, 83, 0.1);
+}
+
+.summary-card.loss:hover {
+    box-shadow: 0 8px 20px rgba(255, 82, 82, 0.2), 0 0 30px rgba(255, 82, 82, 0.1);
 }
 
 .summary-card .label {
@@ -86,12 +127,34 @@
     border-radius: 8px;
     padding: 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible;
+}
+
+.holding-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
 }
 
 .holding-item:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 40px rgba(255, 255, 255, 0.05);
+}
+
+.holding-item:hover::after {
+    opacity: 1;
 }
 
 .holding-info {
@@ -181,7 +244,7 @@
     border-radius: 4px;
     font-size: 1rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-width: 32px;
     padding: 6px;
     display: flex;
@@ -190,7 +253,14 @@
 }
 
 .qty-btn-small:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
+.qty-btn-small:active {
+    transform: scale(0.9);
 }
 
 .quantity-input-small input {
@@ -204,11 +274,20 @@
     font-weight: 600;
     min-width: 0;
     width: 50px;
+    transition: all 0.3s ease;
+}
+
+.quantity-input-small input:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .quantity-input-small input:focus {
     outline: none;
     border-color: #667eea;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2), 0 0 15px rgba(102, 126, 234, 0.3);
+    transform: scale(1.05);
 }
 
 .action-buttons {
@@ -239,19 +318,67 @@
 .buy-btn {
     background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
     color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.buy-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.buy-btn:hover:not(:disabled)::before {
+    width: 300px;
+    height: 300px;
 }
 
 .buy-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 200, 83, 0.4), 0 0 30px rgba(0, 200, 83, 0.2);
+}
+
+.buy-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
 }
 
 .sell-btn {
     background: linear-gradient(135deg, #ff5252 0%, #ff1744 100%);
     color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.sell-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.sell-btn:hover:not(:disabled)::before {
+    width: 300px;
+    height: 300px;
 }
 
 .sell-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 82, 82, 0.3);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(255, 82, 82, 0.4), 0 0 30px rgba(255, 82, 82, 0.2);
+}
+
+.sell-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
 }

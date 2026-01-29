@@ -28,14 +28,12 @@ export const TradingProvider = ({ children }) => {
     const [transactions, setTransactions] = useState([]);
     const [notification, setNotification] = useState(null);
 
-    // Initialize stocks on mount
     useEffect(() => {
         const initialStocks = initializeStocks();
         setStocks(initialStocks);
         setSelectedStock(initialStocks[0]);
     }, []);
 
-    // Update stock prices every 2 seconds
     useEffect(() => {
         const interval = setInterval(() => {
             setStocks(prevStocks => prevStocks.map(updateStockPrice));

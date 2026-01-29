@@ -7,6 +7,14 @@
     min-height: 500px;
     display: flex;
     flex-direction: column;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.stock-chart:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .no-selection {
@@ -56,6 +64,7 @@
     padding: 4px 12px;
     border-radius: 6px;
     display: inline-block;
+    transition: all 0.3s ease;
 }
 
 .change-display.positive {
@@ -63,9 +72,19 @@
     background: rgba(0, 200, 83, 0.1);
 }
 
+.change-display.positive:hover {
+    background: rgba(0, 200, 83, 0.2);
+    box-shadow: 0 0 20px rgba(0, 200, 83, 0.3);
+}
+
 .change-display.negative {
     color: #ff5252;
     background: rgba(255, 82, 82, 0.1);
+}
+
+.change-display.negative:hover {
+    background: rgba(255, 82, 82, 0.2);
+    box-shadow: 0 0 20px rgba(255, 82, 82, 0.3);
 }
 
 .time-display {
@@ -84,4 +103,9 @@
     width: 100%;
     height: 100%;
     cursor: crosshair;
+    transition: opacity 0.3s ease;
+}
+
+.chart-canvas:hover {
+    opacity: 0.95;
 }

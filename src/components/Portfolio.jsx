@@ -15,7 +15,7 @@ const Portfolio = () => {
         getTotalProfitLoss,
         getTotalProfitLossPercent,
     } = useTradingContext();
-    
+
     const [quantities, setQuantities] = useState({});
 
     const portfolioValue = getPortfolioValue();
@@ -142,13 +142,13 @@ const Portfolio = () => {
                                             </span>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="holding-actions">
                                         <div className="quantity-control">
                                             <label>Qty</label>
                                             <div className="quantity-input-small">
-                                                <button 
-                                                    onClick={() => decrementQuantity(holding.symbol)} 
+                                                <button
+                                                    onClick={() => decrementQuantity(holding.symbol)}
                                                     className="qty-btn-small"
                                                 >
                                                     -
@@ -159,8 +159,8 @@ const Portfolio = () => {
                                                     onChange={(e) => setQuantity(holding.symbol, e.target.value)}
                                                     min="1"
                                                 />
-                                                <button 
-                                                    onClick={() => incrementQuantity(holding.symbol)} 
+                                                <button
+                                                    onClick={() => incrementQuantity(holding.symbol)}
                                                     className="qty-btn-small"
                                                 >
                                                     +
