@@ -1,0 +1,146 @@
+.portfolio {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 0;
+    overflow: hidden;
+}
+
+.portfolio h2 {
+    margin: 0 0 20px 0;
+    font-size: 1.5rem;
+    color: #fff;
+}
+
+.portfolio-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+    min-width: 0;
+}
+
+.summary-card {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.summary-card .label {
+    font-size: 0.85rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    word-break: break-word;
+}
+
+.summary-card .value {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #fff;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.summary-card.profit .value {
+    color: #00c853;
+}
+
+.summary-card.loss .value {
+    color: #ff5252;
+}
+
+.summary-card .percent {
+    font-size: 0.9rem;
+    margin-left: 8px;
+}
+
+.holdings h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.no-holdings {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.holdings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.holding-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+}
+
+.holding-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.holding-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.holding-info .symbol {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.holding-info .name {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.holding-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 0.95rem;
+    color: #fff;
+    font-weight: 500;
+}
+
+.stat.profit .stat-value {
+    color: #00c853;
+}
+
+.stat.loss .stat-value {
+    color: #ff5252;
+}

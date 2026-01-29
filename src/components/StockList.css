@@ -1,0 +1,105 @@
+.stock-list {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.stock-list h2 {
+    margin: 0 0 20px 0;
+    font-size: 1.5rem;
+    color: #fff;
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.03);
+    padding-bottom: 10px;
+    z-index: 1;
+}
+
+.stocks {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stock-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 12px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stock-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.stock-item.selected {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: #667eea;
+}
+
+.stock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.stock-symbol {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.stock-name {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+.stock-change {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.stock-change.positive {
+    color: #00c853;
+    background: rgba(0, 200, 83, 0.1);
+}
+
+.stock-change.negative {
+    color: #ff5252;
+    background: rgba(255, 82, 82, 0.1);
+}
+
+.stock-price {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* Custom scrollbar */
+.stock-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.stock-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.stock-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.stock-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
