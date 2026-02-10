@@ -6,7 +6,7 @@ import TradePanel from './TradePanel';
 import Notification from './Notification';
 
 const Dashboard = () => {
-    const [showPortfolio, setShowPortfolio] = useState(true);
+    const [showPortfolio, setShowPortfolio] = useState(false);
 
     const gridCols = showPortfolio
         ? 'xl:grid-cols-[300px_1fr_350px]'
@@ -17,7 +17,7 @@ const Dashboard = () => {
             <header className="relative group text-center mb-8 p-5 bg-white/5 border border-white/10 rounded-xl transition-all duration-300 cursor-default hover:bg-white/10 hover:border-white/20 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
                 <button
                     onClick={() => setShowPortfolio(prev => !prev)}
-                    className="absolute right-4 top-4 rounded-md border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-zinc-200 transition-all duration-200 hover:border-white/30 hover:bg-white/10"
+                    className="h-10 absolute right-4 top-7 rounded-lg border border-white/15 bg-white/5 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-zinc-200 transition-all duration-200 hover:border-white/30 hover:bg-white/10"
                     aria-label={showPortfolio ? 'Collapse portfolio panel' : 'Expand portfolio panel'}
                 >
                     {showPortfolio ? 'Hide Portfolio' : 'Show Portfolio'}
