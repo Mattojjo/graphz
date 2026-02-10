@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
-import './StockChart.css';
 
 const CHART_CONFIG = {
     padding: { top: 10, right: 70, bottom: 80, left: 50 },
@@ -256,8 +255,8 @@ const StockChart = () => {
 
     if (!selectedStock) {
         return (
-            <div className="stock-chart">
-                <p className="no-selection">Select a stock to view chart</p>
+            <div className="relative flex flex-col rounded-xl border border-white/10 bg-white/5 p-5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-[calc(100vh-280px)] min-h-[400px]">
+                <p className="flex h-full items-center justify-center text-lg italic text-zinc-500">Select a stock to view chart</p>
             </div>
         );
     }
@@ -267,51 +266,57 @@ const StockChart = () => {
 
     return (
         <>
-            <div className="chart-header-section">
-                <div className="chart-title">
-                    <h2>{selectedStock.symbol}</h2>
-                    <span className="stock-name">{selectedStock.name}</span>
+            <div className="mb-5 flex items-start justify-between rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
+                <div>
+                    <h2 className="m-0 mb-1 text-2xl font-semibold text-zinc-200">{selectedStock.symbol}</h2>
+                    <span className="text-xs text-zinc-500">{selectedStock.name}</span>
                 </div>
-                <div className="chart-info">
+                <div className="text-right">
                     {hoveredData ? (
-                        <div className="ohlc-data">
-                            <div className="ohlc-item">
-                                <span className="ohlc-label">O</span>
-                                <span className="ohlc-value">{formatCurrency(hoveredData.open)}</span>
+                        <div className="flex items-center gap-4 font-mono text-sm text-zinc-200">
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-zinc-500">O</span>
+                                <span>{formatCurrency(hoveredData.open)}</span>
                             </div>
-                            <div className="ohlc-item">
-                                <span className="ohlc-label">H</span>
-                                <span className="ohlc-value">{formatCurrency(hoveredData.high)}</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-zinc-500">H</span>
+                                <span>{formatCurrency(hoveredData.high)}</span>
                             </div>
-                            <div className="ohlc-item">
-                                <span className="ohlc-label">L</span>
-                                <span className="ohlc-value">{formatCurrency(hoveredData.low)}</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-zinc-500">L</span>
+                                <span>{formatCurrency(hoveredData.low)}</span>
                             </div>
-                            <div className="ohlc-item">
-                                <span className="ohlc-label">C</span>
-                                <span className="ohlc-value">{formatCurrency(hoveredData.close)}</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-zinc-500">C</span>
+                                <span>{formatCurrency(hoveredData.close)}</span>
                             </div>
-                            <div className="ohlc-item">
-                                <span className="ohlc-label">Vol</span>
-                                <span className="ohlc-value">{formatVolume(hoveredData.volume)}</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-zinc-500">Vol</span>
+                                <span>{formatVolume(hoveredData.volume)}</span>
                             </div>
-                            <div className="time-display">{hoveredData.time}</div>
+                            <div className="self-center border-l border-white/10 pl-4 text-xs text-zinc-500">{hoveredData.time}</div>
                         </div>
                     ) : (
                         <>
-                            <div className="price-display">{formatCurrency(currentData.close)}</div>
-                            <div className={`change-display ${selectedStock.changePercent >= 0 ? 'positive' : 'negative'}`}>
+                            <div className="mb-1 text-2xl font-medium text-zinc-200">{formatCurrency(currentData.close)}</div>
+                            <div
+                                className={`inline-block rounded-md px-3 py-1 text-sm font-medium transition-colors duration-300 ${
+                                    selectedStock.changePercent >= 0
+                                        ? 'bg-[rgba(95,184,120,0.12)] text-[#5fb878] hover:bg-[rgba(95,184,120,0.18)] hover:shadow-[0_0_15px_rgba(95,184,120,0.2)]'
+                                        : 'bg-[rgba(228,114,111,0.12)] text-[#e4726f] hover:bg-[rgba(228,114,111,0.18)] hover:shadow-[0_0_15px_rgba(228,114,111,0.2)]'
+                                }`}
+                            >
                                 {selectedStock.changePercent >= 0 ? '+' : ''}{selectedStock.changePercent.toFixed(2)}%
                             </div>
                         </>
                     )}
                 </div>
             </div>
-            <div className="stock-chart">
-                <div className="chart-container">
+            <div className="relative flex flex-col rounded-xl border border-white/10 bg-white/5 p-5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-[calc(100vh-280px)] min-h-[400px]">
+                <div className="relative flex-1 min-h-0">
                     <canvas
                         ref={canvasRef}
-                        className="chart-canvas"
+                        className="h-full w-full cursor-crosshair transition-opacity duration-300 hover:opacity-95"
                         onMouseMove={handleMouseMove}
                         onMouseLeave={handleMouseLeave}
                     />
