@@ -1,16 +1,5 @@
 import { useTradingContext } from '../context/TradingContext';
-
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
-
-const formatPercent = (value) => {
-    const sign = value >= 0 ? '+' : '';
-    return `${sign}${value.toFixed(2)}%`;
-};
+import { formatCurrency, formatSignedPercent } from '../utils/format';
 
 const StockList = () => {
     const { stocks, selectedStock, setSelectedStock } = useTradingContext();
@@ -50,7 +39,7 @@ const StockList = () => {
                                             : 'text-[#e4726f] bg-[rgba(228,114,111,0.12)]'
                                     }`}
                                 >
-                                    {formatPercent(stock.changePercent)}
+                                    {formatSignedPercent(stock.changePercent)}
                                 </div>
                             </div>
                             <div className="text-base font-medium text-zinc-200">

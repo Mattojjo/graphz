@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
+import { formatCurrency, formatVolume } from '../utils/format';
 
 const StockChart = () => {
     const { selectedStock } = useTradingContext();
@@ -236,22 +237,6 @@ const StockChart = () => {
             </div>
         );
     }
-
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(value);
-    };
-
-    const formatVolume = (value) => {
-        if (value >= 1000000) {
-            return (value / 1000000).toFixed(2) + 'M';
-        } else if (value >= 1000) {
-            return (value / 1000).toFixed(1) + 'K';
-        }
-        return value.toString();
-    };
 
     const currentData = selectedStock.historicalData[selectedStock.historicalData.length - 1];
     const hoveredData = hoveredPoint !== null ? selectedStock.historicalData[hoveredPoint] : null;

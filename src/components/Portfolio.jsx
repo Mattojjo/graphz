@@ -1,14 +1,6 @@
 import { useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
-
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
-
-const formatPercent = (value) => `${value.toFixed(2)}%`;
+import { formatCurrency, formatPercent } from '../utils/format';
 
 const Portfolio = () => {
     const {

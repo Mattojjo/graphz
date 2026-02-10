@@ -1,12 +1,6 @@
 import { useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
-
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
-};
+import { formatCurrency } from '../utils/format';
 
 const TradePanel = () => {
     const { selectedStock, cash, buyStock, sellStock, getHoldingQuantity } = useTradingContext();

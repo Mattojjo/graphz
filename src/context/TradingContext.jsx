@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { initializeStocks, updateStockPrice } from '../utils/stockData';
 import {
     INITIAL_CASH,
@@ -66,6 +66,10 @@ export const TradingProvider = ({ children }) => {
 
     const buyStock = (symbol, quantity) => {
         const stock = stocks.find(s => s.symbol === symbol);
+        if (!stock || quantity <= 0) {
+            return false;
+        }
+
         const totalCost = stock.currentPrice * quantity;
 
         if (!canBuyStock(cash, stock.currentPrice, quantity)) {
@@ -82,6 +86,9 @@ export const TradingProvider = ({ children }) => {
 
     const sellStock = (symbol, quantity) => {
         const stock = stocks.find(s => s.symbol === symbol);
+        if (!stock || quantity <= 0) {
+            return false;
+        }
         const currentHolding = getHoldingQuantity(holdings, symbol);
 
         if (currentHolding < quantity) {
@@ -97,6 +104,26 @@ export const TradingProvider = ({ children }) => {
         return true;
     };
 
+    const portfolioValue = useMemo(
+        () => calculatePortfolioValue(holdings, stocks),
+        [holdings, stocks]
+    );
+
+    const totalValue = useMemo(
+        () => calculateTotalValue(cash, holdings, stocks),
+        [cash, holdings, stocks]
+    );
+
+    const totalProfitLoss = useMemo(
+        () => totalValue - INITIAL_CASH,
+        [totalValue]
+    );
+
+    const totalProfitLossPercent = useMemo(
+        () => (totalProfitLoss / INITIAL_CASH) * 100,
+        [totalProfitLoss]
+    );
+
     const value = {
         stocks,
         cash,
@@ -107,11 +134,11 @@ export const TradingProvider = ({ children }) => {
         notification,
         buyStock,
         sellStock,
-        getPortfolioValue: () => calculatePortfolioValue(holdings, stocks),
-        getTotalValue: () => calculateTotalValue(cash, holdings, stocks),
+        getPortfolioValue: () => portfolioValue,
+        getTotalValue: () => totalValue,
         getInitialValue: () => INITIAL_CASH,
-        getTotalProfitLoss: () => calculateTotalValue(cash, holdings, stocks) - INITIAL_CASH,
-        getTotalProfitLossPercent: () => ((calculateTotalValue(cash, holdings, stocks) - INITIAL_CASH) / INITIAL_CASH) * 100,
+        getTotalProfitLoss: () => totalProfitLoss,
+        getTotalProfitLossPercent: () => totalProfitLossPercent,
         getHoldingQuantity: (symbol) => getHoldingQuantity(holdings, symbol),
     };
 

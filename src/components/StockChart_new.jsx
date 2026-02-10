@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
+import { formatCurrency, formatVolume } from '../utils/format';
 
 const CHART_CONFIG = {
     padding: { top: 10, right: 70, bottom: 80, left: 50 },
@@ -17,17 +18,36 @@ const CHART_CONFIG = {
     maColor: '#8b9dc3',
 };
 
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(value);
+const prepareCanvas = (canvas) => {
+    const ctx = canvas.getContext('2d');
+    const { width, height } = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx, width, height };
 };
 
-const formatVolume = (value) => {
-    if (value >= 1000000) return `${(value / 1000000).toFixed(2)}M`;
-    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-    return value.toString();
+const getPriceStats = (data) => {
+    const highs = data.map(d => d.high);
+    const lows = data.map(d => d.low);
+    const volumes = data.map(d => d.volume);
+    const minPrice = Math.min(...lows);
+    const maxPrice = Math.max(...highs);
+    const priceRange = maxPrice - minPrice || 1;
+    const maxVolume = Math.max(...volumes);
+    return { minPrice, maxPrice, priceRange, maxVolume };
+};
+
+const getScales = (width, height, dataLength, priceRange) => {
+    const { padding, volumeHeight, candleMinWidth, candleMaxWidth } = CHART_CONFIG;
+    const chartHeight = height - padding.top - padding.bottom - volumeHeight;
+    const chartWidth = width - padding.left - padding.right;
+    const candleWidth = Math.max(candleMinWidth, Math.min(candleMaxWidth, chartWidth / dataLength - 2));
+    const xScale = chartWidth / dataLength;
+    const yScale = chartHeight / priceRange;
+    const volumeY = height - volumeHeight - 10;
+    return { chartHeight, chartWidth, candleWidth, xScale, yScale, volumeY };
 };
 
 const calculateMA = (data, period) => {
@@ -168,6 +188,39 @@ const drawCrosshair = (ctx, candle, i, padding, xScale, candleWidth, chartHeight
     ctx.fillText(priceText, width - padding.right + 7, y + 4);
 };
 
+const drawChart = (canvas, data, hoveredPoint) => {
+    const prepared = prepareCanvas(canvas);
+    const { ctx, width, height } = prepared;
+    const { minPrice, maxPrice, priceRange, maxVolume } = getPriceStats(data);
+    const { padding, volumeHeight } = CHART_CONFIG;
+    const { chartHeight, candleWidth, xScale, yScale, volumeY } = getScales(width, height, data.length, priceRange);
+
+    ctx.clearRect(0, 0, width, height);
+    drawBackground(ctx, width, height);
+    drawGrid(ctx, width, height, padding, chartHeight, minPrice, maxPrice, priceRange);
+    drawTimeLabels(ctx, data, padding, chartHeight, xScale, candleWidth, volumeHeight, height);
+
+    const ma20 = calculateMA(data, CHART_CONFIG.ma20Period);
+    drawMovingAverage(ctx, data, ma20, padding, xScale, candleWidth, chartHeight, minPrice, yScale);
+
+    data.forEach((candle, i) => {
+        drawCandlestick(ctx, candle, i, padding, xScale, candleWidth, chartHeight, minPrice, yScale, hoveredPoint);
+    });
+
+    data.forEach((candle, i) => {
+        drawVolumeBar(ctx, candle, i, padding, xScale, candleWidth, volumeY, maxVolume, volumeHeight);
+    });
+
+    ctx.fillStyle = CHART_CONFIG.textColor;
+    ctx.font = '10px "SF Mono", Consolas, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('Volume', padding.left, volumeY - volumeHeight + 15);
+
+    if (hoveredPoint !== null && data[hoveredPoint]) {
+        drawCrosshair(ctx, data[hoveredPoint], hoveredPoint, padding, xScale, candleWidth, chartHeight, minPrice, yScale, width);
+    }
+};
+
 const StockChart = () => {
     const { selectedStock } = useTradingContext();
     const canvasRef = useRef(null);
@@ -175,60 +228,9 @@ const StockChart = () => {
 
     useEffect(() => {
         if (!selectedStock || !canvasRef.current) return;
-
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        const { width, height } = canvas.getBoundingClientRect();
-
-        canvas.width = width * window.devicePixelRatio;
-        canvas.height = height * window.devicePixelRatio;
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
         const data = selectedStock.historicalData;
-        if (data.length === 0) return;
-
-        const highs = data.map(d => d.high);
-        const lows = data.map(d => d.low);
-        const volumes = data.map(d => d.volume);
-        const minPrice = Math.min(...lows);
-        const maxPrice = Math.max(...highs);
-        const priceRange = maxPrice - minPrice || 1;
-        const maxVolume = Math.max(...volumes);
-
-        const { padding, volumeHeight, candleMinWidth, candleMaxWidth } = CHART_CONFIG;
-        const chartHeight = height - padding.top - padding.bottom - volumeHeight;
-        const chartWidth = width - padding.left - padding.right;
-
-        const candleWidth = Math.max(candleMinWidth, Math.min(candleMaxWidth, chartWidth / data.length - 2));
-        const xScale = chartWidth / data.length;
-        const yScale = chartHeight / priceRange;
-
-        ctx.clearRect(0, 0, width, height);
-        drawBackground(ctx, width, height);
-        drawGrid(ctx, width, height, padding, chartHeight, minPrice, maxPrice, priceRange);
-        drawTimeLabels(ctx, data, padding, chartHeight, xScale, candleWidth, volumeHeight, height);
-
-        const ma20 = calculateMA(data, CHART_CONFIG.ma20Period);
-        drawMovingAverage(ctx, data, ma20, padding, xScale, candleWidth, chartHeight, minPrice, yScale);
-
-        data.forEach((candle, i) => {
-            drawCandlestick(ctx, candle, i, padding, xScale, candleWidth, chartHeight, minPrice, yScale, hoveredPoint);
-        });
-
-        const volumeY = height - volumeHeight - 10;
-        data.forEach((candle, i) => {
-            drawVolumeBar(ctx, candle, i, padding, xScale, candleWidth, volumeY, maxVolume, volumeHeight);
-        });
-
-        ctx.fillStyle = CHART_CONFIG.textColor;
-        ctx.font = '10px "SF Mono", Consolas, monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText('Volume', padding.left, volumeY - volumeHeight + 15);
-
-        if (hoveredPoint !== null && data[hoveredPoint]) {
-            drawCrosshair(ctx, data[hoveredPoint], hoveredPoint, padding, xScale, candleWidth, chartHeight, minPrice, yScale, width);
-        }
-
+        if (!data.length) return;
+        drawChart(canvasRef.current, data, hoveredPoint);
     }, [selectedStock, hoveredPoint]);
 
     const handleMouseMove = (e) => {
@@ -238,10 +240,9 @@ const StockChart = () => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
 
-        const padding = CHART_CONFIG.padding;
+        const { padding } = CHART_CONFIG;
         const chartWidth = rect.width - padding.left - padding.right;
         const xScale = chartWidth / selectedStock.historicalData.length;
-
         const index = Math.floor((x - padding.left) / xScale);
 
         if (index >= 0 && index < selectedStock.historicalData.length) {
