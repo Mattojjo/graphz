@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
 import { formatCurrency } from '../utils/format';
 

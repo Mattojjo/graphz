@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTradingContext } from '../context/TradingContext';
 import { formatCurrency, formatVolume } from '../utils/format';
 
@@ -19,11 +19,39 @@ const CHART_CONFIG = {
 };
 
 const prepareCanvas = (canvas) => {
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext && canvas.getContext('2d');
     const { width, height } = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
+
+    if (!ctx) {
+        // Provide a no-op stub for server-side / JSDOM environments where canvas isn't implemented
+        const noop = () => {};
+        const stub = {
+            setTransform: noop,
+            fillRect: noop,
+            beginPath: noop,
+            moveTo: noop,
+            lineTo: noop,
+            stroke: noop,
+            fillText: noop,
+            measureText: () => ({ width: 0 }),
+            clearRect: noop,
+            fill: noop,
+            strokeRect: noop,
+            closePath: noop,
+            arc: noop,
+            fillStyle: '',
+            strokeStyle: '',
+            lineWidth: 1,
+            font: '',
+            textAlign: 'left',
+            textBaseline: 'middle'
+        };
+        return { ctx: stub, width, height };
+    }
+
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return { ctx, width, height };
 };

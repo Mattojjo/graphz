@@ -1,11 +1,16 @@
 export const INITIAL_CASH = 100000;
 
-const findStock = (stocks, symbol) => stocks.find(s => s.symbol === symbol);
+const findStock = (stocks, symbol) => {
+    if (Array.isArray(stocks)) return stocks.find(s => s.symbol === symbol);
+    if (stocks && typeof stocks === 'object') return { currentPrice: stocks[symbol] };
+    return undefined;
+};
 
 export const calculatePortfolioValue = (holdings, stocks) => {
     return holdings.reduce((total, holding) => {
         const stock = findStock(stocks, holding.symbol);
-        return total + (holding.quantity * stock.currentPrice);
+        const price = stock?.currentPrice ?? 0;
+        return total + (holding.quantity * price);
     }, 0);
 };
 
@@ -17,6 +22,17 @@ export const calculateProfitLoss = (holding, currentPrice) => {
     const currentValue = holding.quantity * currentPrice;
     const investedValue = holding.quantity * holding.averagePrice;
     return currentValue - investedValue;
+};
+
+export const getPortfolioPerformance = (holdings, currentPrices) => {
+    // holdings: [{symbol, quantity, purchasePrice}] and currentPrices: { SYMBOL: price }
+    const invested = holdings.reduce((sum, h) => sum + (h.quantity * (h.purchasePrice ?? h.averagePrice ?? 0)), 0);
+    const current = holdings.reduce((sum, h) => {
+        const price = (currentPrices && typeof currentPrices === 'object') ? currentPrices[h.symbol] : (Array.isArray(currentPrices) ? (currentPrices.find(s=>s.symbol===h.symbol)?.currentPrice) : undefined);
+        return sum + (h.quantity * (price ?? 0));
+    }, 0);
+    if (invested === 0) return 0;
+    return (current - invested) / invested;
 };
 
 export const calculateProfitLossPercent = (holding, currentPrice) => {

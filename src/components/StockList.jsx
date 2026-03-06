@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTradingContext } from '../context/TradingContext';
 import { formatCurrency, formatSignedPercent } from '../utils/format';
 

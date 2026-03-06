@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import StockChart from './StockChart';
 import StockList from './StockList';

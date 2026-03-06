@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { initializeStocks, updateStockPrice } from '../utils/stockData';
 import {
     INITIAL_CASH,
@@ -24,19 +24,17 @@ export const useTradingContext = () => {
     return context;
 };
 
-export const TradingProvider = ({ children }) => {
-    const [stocks, setStocks] = useState([]);
-    const [cash, setCash] = useState(INITIAL_CASH);
-    const [holdings, setHoldings] = useState([]);
-    const [selectedStock, setSelectedStock] = useState(null);
-    const [transactions, setTransactions] = useState([]);
-    const [notification, setNotification] = useState(null);
+export const TradingProvider = ({ children, initialState = {} }) => {
+    const initialStocks = initialState.stocks || initializeStocks();
+    const [stocks, setStocks] = useState(initialStocks);
+    const [cash, setCash] = useState(initialState.cash ?? INITIAL_CASH);
+    const [holdings, setHoldings] = useState(initialState.holdings || []);
+    const [selectedStock, setSelectedStock] = useState(
+        Object.prototype.hasOwnProperty.call(initialState, 'selectedStock') ? initialState.selectedStock : (initialStocks[0] || null)
+    );
+    const [transactions, setTransactions] = useState(initialState.transactions || []);
+    const [notification, setNotification] = useState(initialState.notification || null);
 
-    useEffect(() => {
-        const initialStocks = initializeStocks();
-        setStocks(initialStocks);
-        setSelectedStock(initialStocks[0]);
-    }, []);
 
     useEffect(() => {
         const interval = setInterval(() => {

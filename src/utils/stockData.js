@@ -110,3 +110,15 @@ export const updateStockPrice = (stock) => {
         historicalData: [...stock.historicalData.slice(1), newCandle],
     };
 };
+
+export const fetchStockData = async (symbol) => {
+    try {
+        const res = await fetch(`https://api.example.com/stocks/${symbol}`);
+        if (!res.ok) throw new Error('Failed to fetch stock data');
+        return res.json();
+    } catch (e) {
+        throw new Error('Failed to fetch stock data');
+    }
+};
+
+export default { fetchStockData };
