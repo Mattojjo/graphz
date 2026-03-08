@@ -7,7 +7,7 @@ const Notification = ({ notifications }) => {
 
     if (!items || items.length === 0) return null;
 
-    const baseClasses = 'fixed top-5 right-5 px-5 py-3 rounded-lg font-medium text-sm z-[1000] animate-slide-in shadow cursor-pointer transition-all duration-300 hover:-translate-y-0.5';
+    const baseClasses = 'fixed top-5 right-5 px-5 py-3 rounded-lg font-medium text-sm z-[1000] animate-slide-in shadow cursor-pointer transition-colors duration-200 hover:opacity-95';
 
     const variantClasses = {
         success: 'bg-green-100',

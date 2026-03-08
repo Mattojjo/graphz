@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { useTradingContext } from '../context/TradingContext';
 import { formatCurrency, formatVolume } from '../utils/format';
 
@@ -314,6 +314,7 @@ const StockChart = () => {
     const containerRef = useRef(null);
     const [hoveredPoint, setHoveredPoint] = useState(null);
     const [overlay, setOverlay] = useState(null);
+    const overlayRef = useRef(null);
 
     useEffect(() => {
         if (!selectedStock || !canvasRef.current) return;
@@ -364,6 +365,33 @@ const StockChart = () => {
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, []);
+
+    // Ensure overlay is positioned within the chart container after render
+    useLayoutEffect(() => {
+        if (!overlay || !overlayRef.current || !containerRef.current) return;
+        const ov = overlayRef.current.getBoundingClientRect();
+        const container = containerRef.current.getBoundingClientRect();
+        let newX = overlay.x;
+        let newY = overlay.y;
+
+        // If overlay would overflow the right edge of the container, position it to the left of the click
+        if (newX + ov.width > container.width - 8) {
+            newX = Math.max(8, newX - ov.width - 8);
+        }
+
+        // If overlay would overflow the bottom edge of the container, shift it up
+        if (newY + ov.height > container.height - 8) {
+            newY = Math.max(8, container.height - ov.height - 8);
+        }
+
+        // Prevent negative positions
+        newX = Math.max(8, newX);
+        newY = Math.max(8, newY);
+
+        if (newX !== overlay.x || newY !== overlay.y) {
+            setOverlay(prev => ({ ...prev, x: newX, y: newY }));
+        }
+    }, [overlay]);
 
     const handleCreateOrder = () => {
         if (!overlay || !selectedStock) return;
@@ -443,7 +471,7 @@ const StockChart = () => {
                     />
 
                     {overlay && (
-                        <div style={{ left: overlay.x, top: overlay.y }} className="absolute z-50 w-64 -translate-y-2 translate-x-2 rounded-md border-2 border-green-500 bg-white/5 p-3 shadow-lg">
+                        <div ref={overlayRef} style={{ left: overlay.x, top: overlay.y }} className="absolute z-50 w-64 rounded-md border border-green-300 bg-white/5 p-3 shadow-lg">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="font-medium text-sm">Quick Order</div>
                                 <button onClick={() => setOverlay(null)} className="text-xs px-2 py-1">✕</button>

@@ -13,8 +13,8 @@ const StockList = () => {
                     const isSelected = selectedStock?.symbol === stock.symbol;
                     const isPositive = stock.changePercent >= 0;
                     const itemClasses = [
-                        'relative bg-white/5 p-3 rounded-lg border-2 border-green-500 cursor-pointer transition-all duration-300',
-                        'hover:bg-white/10 hover:border-white/30 hover:translate-x-1 hover:scale-[1.02] hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]',
+                        'relative bg-white/5 p-3 rounded-lg border border-green-300 cursor-pointer transition-colors duration-200',
+                        'hover:bg-white/10 hover:border-white/30',
                         isSelected
                             ? 'bg-[rgba(102,126,234,0.2)] border-[#667eea] shadow-[0_4px_16px_rgba(102,126,234,0.3)] hover:bg-[rgba(102,126,234,0.3)] hover:border-[#764ba2]'
                             : '',

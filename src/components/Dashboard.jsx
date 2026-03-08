@@ -11,17 +11,25 @@ import { useUI } from '../context/UIContext';
 
 const Dashboard = () => {
     const [showPortfolio, setShowPortfolio] = useState(false);
+    const [showStocks, setShowStocks] = useState(true);
     const { theme, toggleTheme } = useTheme();
     const { ui } = useUI();
 
     const gridCols = showPortfolio
-        ? 'xl:grid-cols-[300px_1fr_350px]'
-        : 'xl:grid-cols-[300px_1fr]';
+        ? (showStocks ? 'xl:grid-cols-[300px_1fr_350px]' : 'xl:grid-cols-[1fr_350px]')
+        : (showStocks ? 'xl:grid-cols-[300px_1fr]' : 'xl:grid-cols-[1fr]');
 
     return (
         <div className="min-h-screen p-4 md:p-5" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
             <header className="relative group text-center mb-8 p-5 rounded-xl transition-all duration-300 cursor-default">
                 <div className="absolute right-4 top-4 flex items-center gap-2">
+                    <button
+                        onClick={() => setShowStocks(prev => !prev)}
+                        className="h-9 rounded-lg border border-green-500 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-200"
+                        aria-label={showStocks ? 'Collapse stocks panel' : 'Expand stocks panel'}
+                    >
+                        {showStocks ? 'Hide Stocks' : 'Show Stocks'}
+                    </button>
                     <button
                         onClick={() => setShowPortfolio(prev => !prev)}
                         className="h-9 rounded-lg border border-green-500 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-200"
@@ -46,13 +54,15 @@ const Dashboard = () => {
 
             <Notification />
 
-            <div className={`grid grid-cols-1 gap-5 lg:grid-cols-2 ${gridCols} max-w-[1800px] mx-auto`}>
-                <div className="flex flex-col gap-5">
-                    <Card><StockList /></Card>
-                    <Card><TradePanel /></Card>
-                </div>
+            <div className={`grid grid-cols-1 gap-5 lg:grid-cols-2 ${gridCols} max-w-[1800px] mx-auto`} style={{ transition: 'grid-template-columns 500ms ease-in-out' }}>
+                {showStocks && (
+                    <div className="flex flex-col gap-5 transition-all duration-500 ease-in-out" style={{ willChange: 'width, height' }}>
+                        <Card><StockList /></Card>
+                        <Card><TradePanel /></Card>
+                    </div>
+                )}
 
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-5 transition-all duration-500 ease-in-out" style={{ willChange: 'width, height' }}>
                     <Card><StockChart /></Card>
                 </div>
 
