@@ -77,10 +77,10 @@
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
     @apply rounded-xl p-6;
-    transition: transform 180ms ease, box-shadow 180ms ease;
+    transition: box-shadow 180ms ease, border-color 180ms ease;
   }
 
-  .card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(2,6,23,0.09); }
+  .card:hover { box-shadow: 0 20px 48px rgba(2,6,23,0.09); border-color: rgba(15,23,36,0.18); }
 
   .muted { color: var(--muted); }
   .muted-2 { color: var(--muted-2); }
