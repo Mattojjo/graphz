@@ -25,21 +25,21 @@ const Dashboard = () => {
                 <div className="absolute right-4 top-4 flex items-center gap-2">
                     <button
                         onClick={() => setShowStocks(prev => !prev)}
-                        className="h-9 rounded-lg border border-green-500 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-200"
+                        className="h-9 rounded-lg border border-green-300 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-200"
                         aria-label={showStocks ? 'Collapse stocks panel' : 'Expand stocks panel'}
                     >
                         {showStocks ? 'Hide Stocks' : 'Show Stocks'}
                     </button>
                     <button
                         onClick={() => setShowPortfolio(prev => !prev)}
-                        className="h-9 rounded-lg border border-green-500 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-200"
+                        className="h-9 rounded-lg border border-green-300 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-200"
                         aria-label={showPortfolio ? 'Collapse portfolio panel' : 'Expand portfolio panel'}
                     >
                         {showPortfolio ? 'Hide Portfolio' : 'Show Portfolio'}
                     </button>
                     <button
                         onClick={toggleTheme}
-                        className="h-9 rounded-lg border border-green-500 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-200"
+                        className="h-9 rounded-lg border border-green-300 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] transition-all duration-200"
                         aria-label="Toggle theme"
                     >
                         {theme === 'dark' ? 'Light' : 'Dark'}

@@ -446,7 +446,7 @@ const StockChart = () => {
                         </div>
                     ) : (
                         <>
-                            <div className="mb-1 text-2xl font-medium text-zinc-200 border-2 border-green-500 inline-block px-2 py-0.5 rounded">{formatCurrency(currentData.close)}</div>
+                            <div className="mb-1 text-2xl font-medium text-zinc-200 border border-green-300 inline-block px-2 py-0.5 rounded">{formatCurrency(currentData.close)}</div>
                             <div
                                 className={`inline-block rounded-md px-3 py-1 text-sm font-medium transition-colors duration-300 ${
                                     selectedStock.changePercent >= 0
