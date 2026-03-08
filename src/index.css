@@ -1,21 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* Light theme (default) */
+    --bg: #f7fafc;
+    --card-bg: #ffffff;
+    --muted: #6b7280;
+    --muted-2: #94a3b8;
+    --text: #0f1722;
+    --border: rgba(15,23,36,0.12);
+    --accent: #667eea;
+    --accent-2: #f59e0b;
+    --accent-3: #06b6d4;
+    --accent-gradient: linear-gradient(90deg, var(--accent), var(--accent-2));
+    --success: #16a34a;
+    --danger: #ef4444;
+    --glass: rgba(2,6,23,0.02);
+    --shadow: 0 14px 40px rgba(2,6,23,0.08);
+    --chart-grid: #e6eef8;
+    --chart-text: #334155;
+
     line-height: 1.5;
     font-weight: 400;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #0a0a0a;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  .theme-dark {
+    --bg: #0a0a0a;
+    --card-bg: rgba(255,255,255,0.02);
+    --muted: rgba(255,255,255,0.6);
+    --text: #ffffff;
+    --border: rgba(255,255,255,0.06);
+    --accent: #8b9dc3;
+    --success: #5fb878;
+    --danger: #e4726f;
+    --glass: rgba(255,255,255,0.02);
+    --shadow: 0 8px 24px rgba(0,0,0,0.35);
+    --chart-grid: #1a1a1a;
+    --chart-text: #9aa3b2;
+  }
+
   body {
-    @apply min-h-screen min-w-[320px] bg-[#0a0a0a] text-white font-sans;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+    @apply min-h-screen min-w-[320px];
   }
 
   #root {
@@ -35,6 +70,23 @@
   input[type='number'] {
     -moz-appearance: textfield;
   }
+
+  /* Card utility */
+  .card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    @apply rounded-xl p-6;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(2,6,23,0.09); }
+
+  .muted { color: var(--muted); }
+  .muted-2 { color: var(--muted-2); }
+  .accent { color: var(--accent); }
+  .accent-2 { color: var(--accent-2); }
+  .card-accent { border-top: 3px solid var(--accent); }
 }
 
 @layer utilities {
@@ -53,6 +105,23 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(0,0,0,0.12);
   }
+
+  /* Hide scrollbar (utility) */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Override some Tailwind utility colors to align with the new theme and improve contrast */
+  .bg-white\/5 { background-color: var(--card-bg) !important; }
+  .bg-white\/10 { background-color: var(--glass) !important; }
+  .border-white\/10 { border-color: var(--border) !important; }
+  .border-white\/20 { border-color: rgba(15,23,36,0.18) !important; }
+  .text-zinc-200 { color: var(--muted) !important; }
+  .text-zinc-500 { color: var(--muted-2) !important; }
 }

@@ -36,7 +36,7 @@ const Portfolio = () => {
     };
 
     return (
-        <div className="min-w-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]">
+        <div className="min-w-0 overflow-hidden rounded-xl border border-white/10 bg-white/5 p-5 transition-transform duration-500 ease-in-out" style={{ transformOrigin: 'top' }}>
             <h2 className="mb-5 text-base font-medium text-zinc-300">Portfolio</h2>
 
             <div className="grid min-w-0 grid-cols-1 gap-3.5 sm:grid-cols-2 mb-7">

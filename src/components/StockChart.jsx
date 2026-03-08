@@ -9,13 +9,14 @@ const CHART_CONFIG = {
     candleMinWidth: 2,
     candleMaxWidth: 12,
     ma20Period: 20,
-    backgroundColor: '#0a0a0a',
-    gridColor: '#1a1a1a',
-    textColor: '#666',
+    // colors will be read from CSS vars where possible
+    backgroundColor: 'var(--card-bg)',
+    gridColor: 'var(--chart-grid)',
+    textColor: 'var(--chart-text)',
     font: '11px "SF Mono", Consolas, monospace',
-    greenColor: '#26a69a',
-    redColor: '#ef5350',
-    maColor: '#8b9dc3',
+    greenColor: 'var(--success)',
+    redColor: 'var(--danger)',
+    maColor: 'var(--accent)',
 };
 
 const prepareCanvas = (canvas) => {
@@ -54,6 +55,22 @@ const prepareCanvas = (canvas) => {
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return { ctx, width, height };
+};
+
+const readCssColors = () => {
+    try {
+        const css = getComputedStyle(document.documentElement);
+        return {
+            backgroundColor: css.getPropertyValue('--card-bg').trim() || CHART_CONFIG.backgroundColor,
+            gridColor: css.getPropertyValue('--chart-grid').trim() || CHART_CONFIG.gridColor,
+            textColor: css.getPropertyValue('--chart-text').trim() || CHART_CONFIG.textColor,
+            greenColor: css.getPropertyValue('--success').trim() || CHART_CONFIG.greenColor,
+            redColor: css.getPropertyValue('--danger').trim() || CHART_CONFIG.redColor,
+            maColor: css.getPropertyValue('--accent').trim() || CHART_CONFIG.maColor,
+        };
+    } catch (e) {
+        return {};
+    }
 };
 
 const getPriceStats = (data) => {
@@ -216,7 +233,7 @@ const drawCrosshair = (ctx, candle, i, padding, xScale, candleWidth, chartHeight
     ctx.fillText(priceText, width - padding.right + 7, y + 4);
 };
 
-const drawChart = (canvas, data, hoveredPoint) => {
+const drawChart = (canvas, data, hoveredPoint, orders = []) => {
     const prepared = prepareCanvas(canvas);
     const { ctx, width, height } = prepared;
     const { minPrice, maxPrice, priceRange, maxVolume } = getPriceStats(data);
@@ -224,6 +241,15 @@ const drawChart = (canvas, data, hoveredPoint) => {
     const { chartHeight, candleWidth, xScale, yScale, volumeY } = getScales(width, height, data.length, priceRange);
 
     ctx.clearRect(0, 0, width, height);
+    // read theme colors and apply to config
+    const cssColors = readCssColors();
+    CHART_CONFIG.backgroundColor = cssColors.backgroundColor || CHART_CONFIG.backgroundColor;
+    CHART_CONFIG.gridColor = cssColors.gridColor || CHART_CONFIG.gridColor;
+    CHART_CONFIG.textColor = cssColors.textColor || CHART_CONFIG.textColor;
+    CHART_CONFIG.greenColor = cssColors.greenColor || CHART_CONFIG.greenColor;
+    CHART_CONFIG.redColor = cssColors.redColor || CHART_CONFIG.redColor;
+    CHART_CONFIG.maColor = cssColors.maColor || CHART_CONFIG.maColor;
+
     drawBackground(ctx, width, height);
     drawGrid(ctx, width, height, padding, chartHeight, minPrice, maxPrice, priceRange);
     drawTimeLabels(ctx, data, padding, chartHeight, xScale, candleWidth, volumeHeight, height);
@@ -239,6 +265,39 @@ const drawChart = (canvas, data, hoveredPoint) => {
         drawVolumeBar(ctx, candle, i, padding, xScale, candleWidth, volumeY, maxVolume, volumeHeight);
     });
 
+    // draw order lines for this symbol
+    if (orders && orders.length) {
+        orders.forEach(order => {
+            if (!order || typeof order.price !== 'number') return;
+            const y = padding.top + chartHeight - (order.price - minPrice) * yScale;
+            ctx.save();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = order.side === 'buy' ? 'rgba(95,184,120,0.9)' : 'rgba(228,114,111,0.9)';
+            ctx.setLineDash(order.status === 'pending' ? [6, 4] : []);
+            ctx.beginPath();
+            ctx.moveTo(padding.left, y);
+            ctx.lineTo(width - padding.right, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // draw small label box on the right
+            ctx.fillStyle = 'rgba(20,20,20,0.85)';
+            ctx.font = '11px "SF Mono", Consolas, monospace';
+            const label = `${order.side.toUpperCase()} ${order.type} ${order.quantity}@${order.price.toFixed(2)}`;
+            const textWidth = ctx.measureText(label).width;
+            const boxX = width - padding.right + 6;
+            const boxY = y - 10;
+            const boxW = textWidth + 12;
+            const boxH = 18;
+            ctx.fillRect(boxX, boxY, boxW, boxH);
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, boxX + 6, y);
+            ctx.restore();
+        });
+    }
+
     ctx.fillStyle = CHART_CONFIG.textColor;
     ctx.font = '10px "SF Mono", Consolas, monospace';
     ctx.textAlign = 'left';
@@ -250,16 +309,19 @@ const drawChart = (canvas, data, hoveredPoint) => {
 };
 
 const StockChart = () => {
-    const { selectedStock } = useTradingContext();
+    const { selectedStock, createOrder, orders } = useTradingContext();
     const canvasRef = useRef(null);
+    const containerRef = useRef(null);
     const [hoveredPoint, setHoveredPoint] = useState(null);
+    const [overlay, setOverlay] = useState(null);
 
     useEffect(() => {
         if (!selectedStock || !canvasRef.current) return;
         const data = selectedStock.historicalData;
         if (!data.length) return;
-        drawChart(canvasRef.current, data, hoveredPoint);
-    }, [selectedStock, hoveredPoint]);
+        const ordersForSymbol = orders ? orders.filter(o => o.symbol === selectedStock.symbol) : [];
+        drawChart(canvasRef.current, data, hoveredPoint, ordersForSymbol);
+    }, [selectedStock, hoveredPoint, orders]);
 
     const handleMouseMove = (e) => {
         if (!selectedStock || !canvasRef.current) return;
@@ -280,6 +342,35 @@ const StockChart = () => {
 
     const handleMouseLeave = () => {
         setHoveredPoint(null);
+    };
+
+    const handleCanvasClick = (e) => {
+        if (!selectedStock || !canvasRef.current || !containerRef.current) return;
+        const canvasRect = canvasRef.current.getBoundingClientRect();
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const y = e.clientY - canvasRect.top;
+        const data = selectedStock.historicalData;
+        const { minPrice, maxPrice, priceRange } = getPriceStats(data);
+        const chartHeight = canvasRect.height - CHART_CONFIG.padding.top - CHART_CONFIG.padding.bottom - CHART_CONFIG.volumeHeight;
+        const price = maxPrice - ((y - CHART_CONFIG.padding.top) / chartHeight) * priceRange;
+        const clampedPrice = Math.max(minPrice, Math.min(maxPrice, price));
+        setOverlay({ x: e.clientX - containerRect.left, y: e.clientY - containerRect.top, price: Number(clampedPrice.toFixed(2)), side: 'buy', type: 'limit', quantity: 1 });
+    };
+
+    useEffect(() => {
+        const onKey = (ev) => {
+            if (ev.key === 'Escape') setOverlay(null);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
+    const handleCreateOrder = () => {
+        if (!overlay || !selectedStock) return;
+        const q = Math.max(1, parseInt(overlay.quantity, 10) || 1);
+        const price = overlay.type === 'market' ? undefined : Number(overlay.price);
+        createOrder({ symbol: selectedStock.symbol, side: overlay.side, type: overlay.type, price, quantity: q });
+        setOverlay(null);
     };
 
     if (!selectedStock) {
@@ -327,7 +418,7 @@ const StockChart = () => {
                         </div>
                     ) : (
                         <>
-                            <div className="mb-1 text-2xl font-medium text-zinc-200">{formatCurrency(currentData.close)}</div>
+                            <div className="mb-1 text-2xl font-medium text-zinc-200 border-2 border-green-500 inline-block px-2 py-0.5 rounded">{formatCurrency(currentData.close)}</div>
                             <div
                                 className={`inline-block rounded-md px-3 py-1 text-sm font-medium transition-colors duration-300 ${
                                     selectedStock.changePercent >= 0
@@ -341,14 +432,55 @@ const StockChart = () => {
                     )}
                 </div>
             </div>
-            <div className="relative flex flex-col rounded-xl border border-white/10 bg-white/5 p-5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-[calc(100vh-280px)] min-h-[400px]">
+            <div ref={containerRef} className="relative flex flex-col rounded-xl border border-white/10 bg-white/5 p-5 transition-all duration-300 hover:bg-white/10 hover:border-white/20 hover:shadow-[0_8px_32px_rgba(0,0,0,0.4)] h-[calc(100vh-280px)] min-h-[400px]">
                 <div className="relative flex-1 min-h-0">
                     <canvas
                         ref={canvasRef}
                         className="h-full w-full cursor-crosshair transition-opacity duration-300 hover:opacity-95"
                         onMouseMove={handleMouseMove}
                         onMouseLeave={handleMouseLeave}
+                        onClick={handleCanvasClick}
                     />
+
+                    {overlay && (
+                        <div style={{ left: overlay.x, top: overlay.y }} className="absolute z-50 w-64 -translate-y-2 translate-x-2 rounded-md border-2 border-green-500 bg-white/5 p-3 shadow-lg">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="font-medium text-sm">Quick Order</div>
+                                <button onClick={() => setOverlay(null)} className="text-xs px-2 py-1">✕</button>
+                            </div>
+
+                            <div className="mb-2">
+                                <div className="flex gap-2">
+                                    <button onClick={() => setOverlay(prev => ({ ...prev, side: 'buy' }))} className={`flex-1 rounded px-2 py-1 text-sm ${overlay.side === 'buy' ? 'bg-green-500 text-white' : 'bg-white/10'}`}>Buy</button>
+                                    <button onClick={() => setOverlay(prev => ({ ...prev, side: 'sell' }))} className={`flex-1 rounded px-2 py-1 text-sm ${overlay.side === 'sell' ? 'bg-red-500 text-white' : 'bg-white/10'}`}>Sell</button>
+                                </div>
+                            </div>
+
+                            <div className="mb-2">
+                                <label className="text-xs text-zinc-400">Type</label>
+                                <select value={overlay.type} onChange={(e) => setOverlay(prev => ({ ...prev, type: e.target.value }))} className="w-full rounded mt-1 p-1 bg-white/10">
+                                    <option value="market">Market</option>
+                                    <option value="limit">Limit</option>
+                                    <option value="stop">Stop</option>
+                                </select>
+                            </div>
+
+                            <div className="mb-2">
+                                <label className="text-xs text-zinc-400">Price</label>
+                                <input type="number" value={overlay.price} onChange={(e) => setOverlay(prev => ({ ...prev, price: e.target.value }))} disabled={overlay.type === 'market'} className="w-full rounded mt-1 p-1 bg-white/10" />
+                            </div>
+
+                            <div className="mb-3">
+                                <label className="text-xs text-zinc-400">Quantity</label>
+                                <input type="number" value={overlay.quantity} onChange={(e) => setOverlay(prev => ({ ...prev, quantity: e.target.value }))} className="w-full rounded mt-1 p-1 bg-white/10" />
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button onClick={handleCreateOrder} className="flex-1 rounded bg-green-500 text-white px-3 py-2 text-sm">Place</button>
+                                <button onClick={() => setOverlay(null)} className="flex-1 rounded border px-3 py-2 text-sm">Cancel</button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </>

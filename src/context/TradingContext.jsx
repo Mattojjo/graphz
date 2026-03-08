@@ -34,7 +34,7 @@ export const TradingProvider = ({ children, initialState = {} }) => {
     );
     const [transactions, setTransactions] = useState(initialState.transactions || []);
     const [notification, setNotification] = useState(initialState.notification || null);
-
+    const [orders, setOrders] = useState(initialState.orders || []);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -58,7 +58,8 @@ export const TradingProvider = ({ children, initialState = {} }) => {
     };
 
     const showNotification = (message, type = 'info') => {
-        setNotification({ message, type });
+        const id = Date.now();
+        setNotification({ id, message, type });
         setTimeout(() => setNotification(null), NOTIFICATION_DURATION);
     };
 
@@ -102,6 +103,66 @@ export const TradingProvider = ({ children, initialState = {} }) => {
         return true;
     };
 
+    // Orders API
+    const createOrder = (orderData) => {
+        const id = 'order_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        const order = {
+            id,
+            symbol: orderData.symbol,
+            side: orderData.side, // 'buy' | 'sell'
+            type: orderData.type || 'market', // 'market' | 'limit' | 'stop'
+            price: orderData.price ?? null,
+            quantity: orderData.quantity || 1,
+            status: 'pending',
+            createdAt: Date.now()
+        };
+        setOrders(prev => [order, ...prev]);
+
+        // Execute market orders immediately
+        if (order.type === 'market') {
+            const success = order.side === 'buy' ? buyStock(order.symbol, order.quantity) : sellStock(order.symbol, order.quantity);
+            setOrders(prev => prev.map(o => o.id === id ? { ...o, status: success ? 'filled' : 'rejected', filledAt: success ? Date.now() : undefined, fillPrice: success ? (stocks.find(s => s.symbol === order.symbol)?.currentPrice) : undefined } : o));
+        }
+        return id;
+    };
+
+    const cancelOrder = (id) => {
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: 'cancelled', cancelledAt: Date.now() } : o));
+    };
+
+    // Evaluate pending limit/stop orders when prices update
+    useEffect(() => {
+        if (!orders.length) return;
+        setOrders(prevOrders => {
+            const updated = prevOrders.map(o => ({ ...o }));
+            updated.forEach(order => {
+                if (order.status !== 'pending') return;
+                const stock = stocks.find(s => s.symbol === order.symbol);
+                if (!stock) return;
+                const price = stock.currentPrice;
+                let shouldFill = false;
+                if (order.type === 'limit') {
+                    if (order.side === 'buy' && price <= order.price) shouldFill = true;
+                    if (order.side === 'sell' && price >= order.price) shouldFill = true;
+                } else if (order.type === 'stop') {
+                    if (order.side === 'buy' && price >= order.price) shouldFill = true;
+                    if (order.side === 'sell' && price <= order.price) shouldFill = true;
+                }
+                if (!shouldFill) return;
+                const success = order.side === 'buy' ? buyStock(order.symbol, order.quantity) : sellStock(order.symbol, order.quantity);
+                if (success) {
+                    order.status = 'filled';
+                    order.filledAt = Date.now();
+                    order.fillPrice = price;
+                } else {
+                    order.status = 'rejected';
+                    order.rejectionReason = 'Insufficient funds or shares';
+                }
+            });
+            return updated;
+        });
+    }, [stocks]);
+
     const portfolioValue = useMemo(
         () => calculatePortfolioValue(holdings, stocks),
         [holdings, stocks]
@@ -138,6 +199,9 @@ export const TradingProvider = ({ children, initialState = {} }) => {
         getTotalProfitLoss: () => totalProfitLoss,
         getTotalProfitLossPercent: () => totalProfitLossPercent,
         getHoldingQuantity: (symbol) => getHoldingQuantity(holdings, symbol),
+        orders,
+        createOrder,
+        cancelOrder,
     };
 
     return (
