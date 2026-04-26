@@ -26,9 +26,14 @@ export const useUI = () => {
 };
 
 export const UIProvider = ({ children }) => {
-    const stored = safeLocalStorage.getItem('graphz-ui');
-    const initial = stored ? { ...DEFAULT_UI, ...JSON.parse(stored) } : DEFAULT_UI;
-    const [ui, setUI] = useState(initial);
+    const [ui, setUI] = useState(() => {
+        try {
+            const stored = safeLocalStorage.getItem('graphz-ui');
+            return stored ? { ...DEFAULT_UI, ...JSON.parse(stored) } : DEFAULT_UI;
+        } catch {
+            return DEFAULT_UI;
+        }
+    });
 
     const setOption = (key, value) => {
         setUI(prev => {

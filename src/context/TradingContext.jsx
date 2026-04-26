@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
-import { initializeStocks, updateStockTick } from '../utils/stockData';
+import { initializeStocks, updateStockTick, getTimeframeMs } from '../utils/stockData';
 import { fetchCandles, fetchQuotes } from '../utils/marketData';
 import {
     INITIAL_CASH,
@@ -41,11 +41,22 @@ export const TradingProvider = ({ children, initialState = {} }) => {
     const [chartLines, setChartLines] = useState([]);
     const [isChartLoading, setIsChartLoading] = useState(false);
     const [dataSource, setDataSource] = useState('simulated');
+    // Playback speed: how many real seconds it takes to complete one candle period
+    // '1m' = 60s, '5m' = 300s, '15m' = 900s
+    const [playbackSpeed, setPlaybackSpeed] = useState('1m');
     const timeframeRef = useRef(timeframe);
+    const playbackSpeedRef = useRef(playbackSpeed);
+    const simClockRef = useRef(null); // simulated Unix seconds
 
     useEffect(() => {
         timeframeRef.current = timeframe;
+        // Reset sim clock whenever timeframe changes so next tick re-anchors
+        simClockRef.current = null;
     }, [timeframe]);
+
+    useEffect(() => {
+        playbackSpeedRef.current = playbackSpeed;
+    }, [playbackSpeed]);
 
     // Fetch real candle data from Yahoo Finance when symbol or timeframe changes
     useEffect(() => {
@@ -103,15 +114,35 @@ export const TradingProvider = ({ children, initialState = {} }) => {
                 .catch(() => { /* silently ignore */ });
         };
 
-        const id = setInterval(poll, 30000);
+        const id = setInterval(poll, 60000);
         return () => clearInterval(id);
     }, [dataSource, stocks.map(s => s.symbol).join(',')]);
 
     useEffect(() => {
+        const TICK_SEC = PRICE_UPDATE_INTERVAL / 1000; // 0.5 seconds per tick
+        const PLAYBACK_SECS = { '5s': 5, '1m': 60, '5m': 300, '15m': 900 };
+
         const interval = setInterval(() => {
-            setStocks(prevStocks =>
-                prevStocks.map(stock => updateStockTick(stock, timeframeRef.current))
-            );
+            const tf = timeframeRef.current;
+            const tfSec = getTimeframeMs(tf) / 1000;
+            const playbackSec = PLAYBACK_SECS[playbackSpeedRef.current] ?? 60;
+
+            // Advance simulated clock: each real tick moves sim time by tfSec/playbackSec * TICK_SEC
+            // e.g. 1h candle with 1m playback: each 0.5s real tick → 30s sim advance
+            const simAdvance = (tfSec / playbackSec) * TICK_SEC;
+
+            setStocks(prevStocks => {
+                // Anchor sim clock to last candle time on first tick after reset
+                if (simClockRef.current === null) {
+                    const anchor = prevStocks[0]?.historicalData?.slice(-1)[0]?.time;
+                    simClockRef.current = anchor ? Number(anchor) : Math.floor(Date.now() / 1000);
+                }
+                simClockRef.current += simAdvance;
+
+                return prevStocks.map(stock =>
+                    updateStockTick(stock, tf, simClockRef.current)
+                );
+            });
         }, PRICE_UPDATE_INTERVAL);
         return () => clearInterval(interval);
     }, []);
@@ -265,11 +296,20 @@ export const TradingProvider = ({ children, initialState = {} }) => {
         [totalProfitLoss]
     );
 
+    // Always derive selectedStock from the live stocks array so the chart
+    // receives every simulation tick update without needing a separate setter call.
+    const liveSelectedStock = useMemo(
+        () => selectedStock
+            ? (stocks.find(s => s.symbol === selectedStock.symbol) ?? selectedStock)
+            : null,
+        [selectedStock, stocks]
+    );
+
     const value = {
         stocks,
         cash,
         holdings,
-        selectedStock,
+        selectedStock: liveSelectedStock,
         setSelectedStock,
         transactions,
         notification,
@@ -294,6 +334,8 @@ export const TradingProvider = ({ children, initialState = {} }) => {
         clearChartLines,
         isChartLoading,
         dataSource,
+        playbackSpeed,
+        setPlaybackSpeed,
     };
 
     return (

@@ -1,4 +1,6 @@
-const YF_BASE = 'https://query1.finance.yahoo.com';
+// In the browser, requests go through Vite's dev proxy (/yf → query1.finance.yahoo.com)
+// which adds the missing CORS headers. In Node/test environments hit Yahoo directly.
+const YF_BASE = typeof window !== 'undefined' ? '/yf' : 'https://query1.finance.yahoo.com';
 
 const YF_PARAMS = {
     '1m':  { interval: '1m',  range: '1d' },
@@ -69,21 +71,29 @@ export const fetchCandles = async (symbol, timeframe) => {
 };
 
 /**
- * Batch-fetch current quotes for multiple symbols.
+ * Batch-fetch current quotes for multiple symbols using the chart meta endpoint.
+ * The /v7/finance/quote endpoint now requires auth; chart meta doesn't.
  * Returns { AAPL: { price, change, changePercent }, ... }
  */
 export const fetchQuotes = async (symbols) => {
-    const url = `${YF_BASE}/v7/finance/quote?symbols=${symbols.join(',')}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Yahoo Finance ${res.status}`);
-    const json = await res.json();
-    const results = json?.quoteResponse?.result ?? [];
-    return results.reduce((acc, q) => {
-        acc[q.symbol] = {
-            price:         q.regularMarketPrice ?? null,
-            change:        q.regularMarketChange ?? 0,
-            changePercent: q.regularMarketChangePercent ?? 0,
-        };
+    const settled = await Promise.allSettled(
+        symbols.map(async (symbol) => {
+            const res = await fetch(`${YF_BASE}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            const meta = json?.chart?.result?.[0]?.meta;
+            if (!meta?.regularMarketPrice) throw new Error('no price');
+            const price = meta.regularMarketPrice;
+            const prev = meta.chartPreviousClose ?? price;
+            const change = price - prev;
+            return { symbol, price, change, changePercent: prev ? (change / prev) * 100 : 0 };
+        })
+    );
+    return settled.reduce((acc, r) => {
+        if (r.status === 'fulfilled') {
+            const { symbol, ...rest } = r.value;
+            acc[symbol] = rest;
+        }
         return acc;
     }, {});
 };

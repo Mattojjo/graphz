@@ -10,4 +10,19 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      // Proxy /yf/* → https://query1.finance.yahoo.com/*
+      // This sidesteps the CORS block that Yahoo Finance applies to browser requests.
+      '/yf': {
+        target: 'https://query1.finance.yahoo.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/yf/, ''),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+        },
+      },
+    },
+  },
 })

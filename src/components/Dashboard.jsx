@@ -11,6 +11,32 @@ import ChartToolbar from './ChartToolbar';
 import DrawingToolbar from './DrawingToolbar';
 import Notification from './Notification';
 
+const HeaderIconButton = ({ onClick, title, children }) => {
+    const [hovered, setHovered] = React.useState(false);
+    return (
+        <button
+            onClick={onClick}
+            title={title}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+                width: '30px', height: '30px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: hovered ? '#2a2e39' : 'transparent',
+                border: '1px solid',
+                borderColor: hovered ? '#363c4e' : 'transparent',
+                color: hovered ? '#d1d4dc' : '#787b86',
+                cursor: 'pointer',
+                borderRadius: '6px',
+                transition: 'background 0.15s, border-color 0.15s, color 0.15s',
+                flexShrink: 0,
+            }}
+        >
+            {children}
+        </button>
+    );
+};
+
 const Dashboard = () => {
     const { selectedStock, stocks } = useTradingContext();
     const { ui, togglePortfolio } = useUI();
@@ -75,38 +101,35 @@ const Dashboard = () => {
                     )}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button
-                        onClick={toggleTheme}
-                        title="Toggle theme"
-                        style={{
-                            width: '32px', height: '32px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'var(--text-muted)',
-                            fontSize: '16px',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                        }}
-                    >
-                        {theme === 'dark' ? '☀️' : '🌙'}
-                    </button>
-                    <button
-                        title="Notifications"
-                        style={{
-                            width: '32px', height: '32px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: 'transparent',
-                            border: 'none',
-                            color: 'var(--text-muted)',
-                            fontSize: '16px',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                        }}
-                    >
-                        🔔
-                    </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <HeaderIconButton onClick={toggleTheme} title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+                        {theme === 'dark' ? (
+                            /* Sun */
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="5"/>
+                                <line x1="12" y1="1" x2="12" y2="3"/>
+                                <line x1="12" y1="21" x2="12" y2="23"/>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                                <line x1="1" y1="12" x2="3" y2="12"/>
+                                <line x1="21" y1="12" x2="23" y2="12"/>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                            </svg>
+                        ) : (
+                            /* Moon */
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                            </svg>
+                        )}
+                    </HeaderIconButton>
+                    <HeaderIconButton title="Notifications">
+                        {/* Bell */}
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                    </HeaderIconButton>
                 </div>
             </div>
 
@@ -208,10 +231,9 @@ const Dashboard = () => {
                         {ui.showPortfolio ? '▼' : '▲'}
                     </span>
                 </button>
-                    <div style={{ overflowY: 'auto', maxHeight: '224px' }} className="custom-scrollbar">
-                        <Portfolio />
-                    </div>
-                )}
+                <div style={{ overflowY: 'auto', maxHeight: '224px' }} className="custom-scrollbar">
+                    <Portfolio />
+                </div>
             </div>
 
             <Notification />

@@ -26,6 +26,7 @@ const StockChart = ({ onHoverChange }) => {
     const isInitializedRef = useRef(false);
     const lastSymbolRef = useRef(null);
     const lastTimeframeRef = useRef(null);
+    const chartLastTimeRef = useRef(0);
     const drawingToolRef = useRef(drawingTool);
     const addChartLineRef = useRef(addChartLine);
 
@@ -141,6 +142,7 @@ const StockChart = ({ onHoverChange }) => {
             volumeSeriesRef.current = null;
             maSeriesRef.current = null;
             isInitializedRef.current = false;
+            chartLastTimeRef.current = 0;
         };
     }, []);
 
@@ -153,52 +155,68 @@ const StockChart = ({ onHoverChange }) => {
         const isNewStock = symbol !== lastSymbolRef.current;
         const isNewTimeframe = tf !== lastTimeframeRef.current;
 
-        if (isNewStock || isNewTimeframe || !isInitializedRef.current) {
-            // Full reload
-            const candles = selectedStock.historicalData.map(d => ({
-                time: d.time,
-                open: d.open,
-                high: d.high,
-                low: d.low,
-                close: d.close,
-            }));
-            const volumes = selectedStock.historicalData.map(d => ({
-                time: d.time,
-                value: d.volume,
-                color: d.close >= d.open ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)',
-            }));
-            const maData = calculateMA(selectedStock.historicalData);
+        const lastD = selectedStock.historicalData[selectedStock.historicalData.length - 1];
+        const lastDTime = Number(lastD?.time ?? 0);
+        // Force full reload if: new symbol/timeframe, not yet initialized, or
+        // incoming data is older than the chart's current last bar (Yahoo refresh reset)
+        const needsFullReload =
+            isNewStock || isNewTimeframe || !isInitializedRef.current ||
+            lastDTime < chartLastTimeRef.current;
 
-            candleSeriesRef.current.setData(candles);
-            volumeSeriesRef.current.setData(volumes);
-            maSeriesRef.current.setData(maData);
-            chartRef.current.timeScale().scrollToRealTime();
+        try {
+            if (needsFullReload) {
+                const candles = selectedStock.historicalData.map(d => ({
+                    time: Number(d.time),
+                    open: d.open,
+                    high: d.high,
+                    low: d.low,
+                    close: d.close,
+                }));
+                const volumes = selectedStock.historicalData.map(d => ({
+                    time: Number(d.time),
+                    value: d.volume,
+                    color: d.close >= d.open ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)',
+                }));
+                const maData = calculateMA(selectedStock.historicalData);
 
-            lastSymbolRef.current = symbol;
-            lastTimeframeRef.current = tf;
-            isInitializedRef.current = true;
-        } else {
-            // Incremental update: only update last bar
-            const d = selectedStock.historicalData[selectedStock.historicalData.length - 1];
-            candleSeriesRef.current.update({
-                time: d.time,
-                open: d.open,
-                high: d.high,
-                low: d.low,
-                close: d.close,
-            });
-            volumeSeriesRef.current.update({
-                time: d.time,
-                value: d.volume,
-                color: d.close >= d.open ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)',
-            });
-            // Update MA for last point if enough data
-            const hist = selectedStock.historicalData;
-            if (hist.length >= 20) {
-                const last20 = hist.slice(-20);
-                const avg = last20.reduce((s, c) => s + c.close, 0) / 20;
-                maSeriesRef.current.update({ time: d.time, value: avg });
+                candleSeriesRef.current.setData(candles);
+                volumeSeriesRef.current.setData(volumes);
+                maSeriesRef.current.setData(maData);
+                chartRef.current.timeScale().scrollToRealTime();
+
+                lastSymbolRef.current = symbol;
+                lastTimeframeRef.current = tf;
+                isInitializedRef.current = true;
+                chartLastTimeRef.current = candles.length ? candles[candles.length - 1].time : 0;
+            } else {
+                // Incremental update: only update last bar
+                const dTime = lastDTime;
+                candleSeriesRef.current.update({
+                    time: dTime,
+                    open: lastD.open,
+                    high: lastD.high,
+                    low: lastD.low,
+                    close: lastD.close,
+                });
+                volumeSeriesRef.current.update({
+                    time: dTime,
+                    value: lastD.volume,
+                    color: lastD.close >= lastD.open ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)',
+                });
+                // Update MA for last point if enough data
+                const hist = selectedStock.historicalData;
+                if (hist.length >= 20) {
+                    const last20 = hist.slice(-20);
+                    const avg = last20.reduce((s, c) => s + c.close, 0) / 20;
+                    maSeriesRef.current.update({ time: dTime, value: avg });
+                }
+                chartLastTimeRef.current = Math.max(chartLastTimeRef.current, dTime);
             }
+        } catch (err) {
+            // On any chart update error, reset state and let next tick do a full reload
+            console.warn('[StockChart] chart update error, resetting:', err.message);
+            isInitializedRef.current = false;
+            chartLastTimeRef.current = 0;
         }
     }, [selectedStock, timeframe]);
 

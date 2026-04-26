@@ -81,10 +81,10 @@ export const initializeStocks = () => {
     }));
 };
 
-export const updateStockTick = (stock, timeframe = '1m') => {
+export const updateStockTick = (stock, timeframe = '1m', simNowSec = null) => {
     const tfMs = getTimeframeMs(timeframe);
     const tfSec = Math.floor(tfMs / 1000);
-    const nowSec = Math.floor(Date.now() / 1000);
+    const nowSec = simNowSec !== null ? simNowSec : Math.floor(Date.now() / 1000);
 
     const historicalData = [...stock.historicalData];
     const lastCandle = historicalData[historicalData.length - 1];

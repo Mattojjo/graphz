@@ -38,6 +38,7 @@ describe('Dashboard component', () => {
 
         const portfolioBtn = screen.getByRole('button', { name: /toggle portfolio panel/i })
         await user.click(portfolioBtn)
-        expect(screen.getByText(/Cash/i)).toBeTruthy()
+        // Portfolio summary grid renders a "Total Value" label (distinct from TradePanel)
+        expect(screen.getByText('Total Value')).toBeTruthy()
     })
 })
