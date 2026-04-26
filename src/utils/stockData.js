@@ -11,9 +11,28 @@ export const STOCKS = [
     { symbol: 'INTC', name: 'Intel Corp.', basePrice: 43.85 },
 ];
 
+export const TIMEFRAMES = ['1s', '1m', '3m', '5m', '15m', '1h', '2h', '4h', '1D'];
+
+export const getTimeframeMs = (tf) => {
+    const map = {
+        '1s': 1000,
+        '1m': 60000,
+        '3m': 180000,
+        '5m': 300000,
+        '15m': 900000,
+        '1h': 3600000,
+        '2h': 7200000,
+        '4h': 14400000,
+        '1D': 86400000,
+    };
+    return map[tf] || 60000;
+};
+
 const DRIFT_FACTOR = 0.001;
 const DRIFT_BIAS = 0.48;
 const MIN_PRICE = 0.01;
+const MIN_VOLUME = 500000;
+const MAX_VOLUME = 1500000;
 
 export const generatePriceMovement = (currentPrice, volatility = 0.02) => {
     const drift = (Math.random() - DRIFT_BIAS) * DRIFT_FACTOR;
@@ -22,54 +41,33 @@ export const generatePriceMovement = (currentPrice, volatility = 0.02) => {
     return Math.max(currentPrice + priceChange, MIN_PRICE);
 };
 
-const VOLATILITY_FACTOR = 0.003;
-const MIN_VOLUME = 500000;
-const MAX_VOLUME = 1500000;
-const MINUTE_MS = 60000;
+const generateVolume = () =>
+    Math.floor(Math.random() * (MAX_VOLUME - MIN_VOLUME)) + MIN_VOLUME;
 
-const generateOHLC = (open, basePrice) => {
-    const volatility = basePrice * VOLATILITY_FACTOR;
-    const high = open + Math.random() * volatility;
-    const low = open - Math.random() * volatility;
-    const close = low + Math.random() * (high - low);
-    return { open, high, low, close };
-};
-
-const generateVolume = () => {
-    return Math.floor(Math.random() * (MAX_VOLUME - MIN_VOLUME)) + MIN_VOLUME;
-};
-
-const formatTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
-export const generateHistoricalData = (basePrice, points = 100) => {
+export const generateHistoricalDataForTimeframe = (basePrice, timeframe, points = 150) => {
+    const tfMs = getTimeframeMs(timeframe);
     const data = [];
     let price = basePrice;
-    const now = Date.now();
+    const nowSec = Math.floor(Date.now() / 1000);
+    const tfSec = Math.floor(tfMs / 1000);
 
-    for (let i = points; i >= 0; i--) {
-        const timestamp = now - (i * MINUTE_MS);
-        const { open, high, low, close } = generateOHLC(price, basePrice);
-
-        data.push({
-            timestamp,
-            price: close,
-            open,
-            high,
-            low,
-            close,
-            volume: generateVolume(),
-            time: formatTime(timestamp),
-        });
-
+    for (let i = points - 1; i >= 0; i--) {
+        const time = nowSec - i * tfSec;
+        const volatility = basePrice * 0.003;
+        const open = price;
+        const high = open + Math.random() * volatility;
+        const low = open - Math.random() * volatility;
+        const close = low + Math.random() * (high - low);
+        data.push({ time, open, high, low, close, volume: generateVolume() });
         price = generatePriceMovement(close, 0.015);
     }
 
     return data;
+};
+
+// Keep old function name for backward compat (used in tests)
+export const generateHistoricalData = (basePrice, points = 100) => {
+    return generateHistoricalDataForTimeframe(basePrice, '1m', points);
 };
 
 export const initializeStocks = () => {
@@ -79,37 +77,64 @@ export const initializeStocks = () => {
         previousPrice: stock.basePrice,
         change: 0,
         changePercent: 0,
-        historicalData: generateHistoricalData(stock.basePrice),
+        historicalData: generateHistoricalDataForTimeframe(stock.basePrice, '1m'),
     }));
 };
 
-export const updateStockPrice = (stock) => {
-    const lastData = stock.historicalData[stock.historicalData.length - 1];
-    const { open, high, low, close } = generateOHLC(lastData.close, stock.basePrice);
+export const updateStockTick = (stock, timeframe = '1m') => {
+    const tfMs = getTimeframeMs(timeframe);
+    const tfSec = Math.floor(tfMs / 1000);
+    const nowSec = Math.floor(Date.now() / 1000);
 
-    const change = close - stock.basePrice;
+    const historicalData = [...stock.historicalData];
+    const lastCandle = historicalData[historicalData.length - 1];
+
+    // Generate a small tick movement
+    const newPrice = generatePriceMovement(stock.currentPrice, 0.005);
+
+    const currentPeriodStart = lastCandle.time;
+    const periodExpired = nowSec >= currentPeriodStart + tfSec;
+
+    if (!periodExpired) {
+        // Update current candle in place
+        const updated = {
+            ...lastCandle,
+            high: Math.max(lastCandle.high, newPrice),
+            low: Math.min(lastCandle.low, newPrice),
+            close: newPrice,
+        };
+        historicalData[historicalData.length - 1] = updated;
+    } else {
+        // Start a new candle
+        const newCandleTime = currentPeriodStart + tfSec;
+        const newCandle = {
+            time: newCandleTime,
+            open: lastCandle.close,
+            high: Math.max(lastCandle.close, newPrice),
+            low: Math.min(lastCandle.close, newPrice),
+            close: newPrice,
+            volume: generateVolume(),
+        };
+        historicalData.push(newCandle);
+        // Keep only last 200 candles
+        if (historicalData.length > 200) historicalData.shift();
+    }
+
+    const change = newPrice - stock.basePrice;
     const changePercent = (change / stock.basePrice) * 100;
-
-    const newCandle = {
-        timestamp: Date.now(),
-        price: close,
-        open,
-        high,
-        low,
-        close,
-        volume: generateVolume(),
-        time: formatTime(Date.now()),
-    };
 
     return {
         ...stock,
         previousPrice: stock.currentPrice,
-        currentPrice: close,
+        currentPrice: newPrice,
         change,
         changePercent,
-        historicalData: [...stock.historicalData.slice(1), newCandle],
+        historicalData,
     };
 };
+
+// Keep old function for backward compat
+export const updateStockPrice = (stock) => updateStockTick(stock, '1m');
 
 export const fetchStockData = async (symbol) => {
     try {

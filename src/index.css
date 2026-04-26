@@ -1,27 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 @layer base {
   :root {
-    /* Light theme (default) */
-    --bg: #f7fafc;
-    --card-bg: #ffffff;
-    --muted: #6b7280;
-    --muted-2: #94a3b8;
-    --text: #0f1722;
-    --border: rgba(15,23,36,0.12);
-    --accent: #667eea;
-    --accent-2: #f59e0b;
-    --accent-3: #06b6d4;
-    --accent-gradient: linear-gradient(90deg, var(--accent), var(--accent-2));
-    --success: #16a34a;
-    --danger: #ef4444;
-    --glass: rgba(2,6,23,0.02);
-    --shadow: 0 14px 40px rgba(2,6,23,0.08);
-    --chart-grid: #e6eef8;
-    --chart-text: #334155;
+    /* TradingView dark theme (default) */
+    --bg: #131722;
+    --panel-bg: #1e2329;
+    --card-bg: #1a1e2b;
+    --border: #2a2e39;
+    --text: #d1d4dc;
+    --text-muted: #787b86;
+    --bull: #26a69a;
+    --bear: #ef5350;
+    --accent: #2962ff;
+    --header-bg: #1e222d;
+    --success: #26a69a;
+    --danger: #ef5350;
 
     line-height: 1.5;
     font-weight: 400;
@@ -32,24 +33,39 @@
   }
 
   .theme-dark {
-    --bg: #0a0a0a;
-    --card-bg: rgba(255,255,255,0.02);
-    --muted: rgba(255,255,255,0.6);
-    --text: #ffffff;
-    --border: rgba(255,255,255,0.06);
-    --accent: #8b9dc3;
-    --success: #5fb878;
-    --danger: #e4726f;
-    --glass: rgba(255,255,255,0.02);
-    --shadow: 0 8px 24px rgba(0,0,0,0.35);
-    --chart-grid: #1a1a1a;
-    --chart-text: #9aa3b2;
+    --bg: #131722;
+    --panel-bg: #1e2329;
+    --card-bg: #1a1e2b;
+    --border: #2a2e39;
+    --text: #d1d4dc;
+    --text-muted: #787b86;
+    --bull: #26a69a;
+    --bear: #ef5350;
+    --accent: #2962ff;
+    --header-bg: #1e222d;
+    --success: #26a69a;
+    --danger: #ef5350;
+  }
+
+  .theme-light {
+    --bg: #ffffff;
+    --panel-bg: #f0f3fa;
+    --card-bg: #ffffff;
+    --border: #e0e3eb;
+    --text: #131722;
+    --text-muted: #787b86;
+    --bull: #26a69a;
+    --bear: #ef5350;
+    --accent: #2962ff;
+    --header-bg: #f0f3fa;
+    --success: #26a69a;
+    --danger: #ef5350;
   }
 
   body {
     background-color: var(--bg);
     color: var(--text);
-    font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     @apply min-h-screen min-w-[320px];
   }
 
@@ -70,45 +86,26 @@
   input[type='number'] {
     -moz-appearance: textfield;
   }
-
-  /* Card utility */
-  .card {
-    background-color: var(--card-bg);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    @apply rounded-xl p-6;
-    transition: box-shadow 180ms ease, border-color 180ms ease;
-  }
-
-  .card:hover { box-shadow: 0 20px 48px rgba(2,6,23,0.09); border-color: rgba(15,23,36,0.18); }
-
-  .muted { color: var(--muted); }
-  .muted-2 { color: var(--muted-2); }
-  .accent { color: var(--accent); }
-  .accent-2 { color: var(--accent-2); }
-  .card-accent { border-top: 3px solid var(--accent); }
 }
 
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
+    background: transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+    background: var(--border);
+    border-radius: 3px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(0,0,0,0.12);
+    background: var(--text-muted);
   }
 
-  /* Hide scrollbar (utility) */
   .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -116,12 +113,4 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
-
-  /* Override some Tailwind utility colors to align with the new theme and improve contrast */
-  .bg-white\/5 { background-color: var(--card-bg) !important; }
-  .bg-white\/10 { background-color: var(--glass) !important; }
-  .border-white\/10 { border-color: var(--border) !important; }
-  .border-white\/20 { border-color: rgba(15,23,36,0.18) !important; }
-  .text-zinc-200 { color: var(--muted) !important; }
-  .text-zinc-500 { color: var(--muted-2) !important; }
 }

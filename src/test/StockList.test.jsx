@@ -13,7 +13,7 @@ describe('StockList component', () => {
 
   it('renders without crashing', () => {
     render(<StockList />, { wrapper: ({ children }) => (<TradingProvider initialState={{ stocks: mockStocks }}>{children}</TradingProvider>) })
-    expect(screen.getByText(/stock market/i)).toBeTruthy()
+    expect(screen.getByText(/watchlist/i)).toBeTruthy()
   })
 
   it('displays all stocks with correct information', () => {

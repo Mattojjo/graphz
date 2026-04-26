@@ -3,37 +3,41 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Dashboard from '../components/Dashboard'
 import { TradingProvider } from '../context/TradingContext'
+import { vi } from 'vitest'
+
+vi.mock('lightweight-charts', () => ({
+    createChart: vi.fn(() => ({
+        addSeries: vi.fn(() => ({
+            setData: vi.fn(), update: vi.fn(), applyOptions: vi.fn(),
+            createPriceLine: vi.fn(() => ({})), removePriceLine: vi.fn(),
+            coordinateToPrice: vi.fn(() => 150),
+        })),
+        priceScale: vi.fn(() => ({ applyOptions: vi.fn() })),
+        timeScale: vi.fn(() => ({ scrollToRealTime: vi.fn(), fitContent: vi.fn() })),
+        subscribeCrosshairMove: vi.fn(), subscribeClick: vi.fn(),
+        unsubscribeCrosshairMove: vi.fn(), unsubscribeClick: vi.fn(),
+        applyOptions: vi.fn(), resize: vi.fn(), remove: vi.fn(),
+    })),
+    CandlestickSeries: {}, HistogramSeries: {}, LineSeries: {},
+}))
 
 describe('Dashboard component', () => {
-  it('renders without crashing', () => {
-    render(<Dashboard />, { wrapper: TradingProvider })
-    expect(screen.getByText(/GraphZ Trading Platform/i)).toBeTruthy()
-  })
-
-  it('displays portfolio value and performance', () => {
-    const mockPortfolioValue = 50000
-    const mockPerformance = 0.1234
-
-    render(<Dashboard />, {
-      wrapper: ({ children }) => (
-        <TradingProvider>
-          <div data-testid="dashboard">
-            {children}
-          </div>
-        </TradingProvider>
-      )
+    it('renders without crashing', () => {
+        render(<Dashboard />, { wrapper: TradingProvider })
+        expect(screen.getByText(/GraphZ/i)).toBeTruthy()
     })
 
-    // Updated to reflect actual Dashboard implementation
-    expect(screen.getByText(/stock market/i)).toBeTruthy()
-    expect(screen.getByText(/live market simulation/i)).toBeTruthy()
-  })
+    it('displays watchlist and stock info', () => {
+        render(<Dashboard />, { wrapper: TradingProvider })
+        expect(screen.getByText(/Watchlist/i)).toBeTruthy()
+    })
 
-  it('navigates to portfolio when clicking on portfolio link', async () => {
-    const user = userEvent.setup()
-    render(<Dashboard />, { wrapper: TradingProvider })
+    it('shows and hides portfolio on toggle', async () => {
+        const user = userEvent.setup()
+        render(<Dashboard />, { wrapper: TradingProvider })
 
-    await user.click(screen.getByRole('button', { name: /expand portfolio panel/i }))
-    expect(screen.getByRole('heading', { name: /portfolio/i })).toBeTruthy()
-  })
+        const portfolioBtn = screen.getByRole('button', { name: /toggle portfolio panel/i })
+        await user.click(portfolioBtn)
+        expect(screen.getByText(/Cash/i)).toBeTruthy()
+    })
 })

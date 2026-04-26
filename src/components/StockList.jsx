@@ -1,55 +1,91 @@
 import React from 'react';
 import { useTradingContext } from '../context/TradingContext';
-import { formatCurrency, formatSignedPercent } from '../utils/format';
+import { formatCurrency } from '../utils/format';
 
 const StockList = () => {
     const { stocks, selectedStock, setSelectedStock } = useTradingContext();
 
     return (
-        <div className="max-h-[500px] overflow-y-auto hide-scrollbar transition-all duration-300">
-            <h2 className="sticky top-0 z-10 mb-5 pb-2 text-base font-medium muted">Stock Market</h2>
-            <div className="flex flex-col gap-2.5">
-                {stocks.map(stock => {
-                    const isSelected = selectedStock?.symbol === stock.symbol;
-                    const isPositive = stock.changePercent >= 0;
-                    const itemClasses = [
-                        'relative bg-white/5 p-3 rounded-lg border border-green-300 cursor-pointer transition-colors duration-200',
-                        'hover:bg-white/10 hover:border-white/30',
-                        isSelected
-                            ? 'bg-[rgba(102,126,234,0.2)] border-[#667eea] shadow-[0_4px_16px_rgba(102,126,234,0.3)] hover:bg-[rgba(102,126,234,0.3)] hover:border-[#764ba2]'
-                            : '',
-                    ]
-                        .filter(Boolean)
-                        .join(' ');
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{
+                padding: '8px 12px',
+                fontSize: '10px',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+                color: 'var(--text-muted)',
+                background: 'var(--panel-bg)',
+                position: 'sticky',
+                top: 0,
+                borderBottom: '1px solid var(--border)',
+                zIndex: 1,
+            }}>
+                Watchlist
+            </div>
 
-                    return (
-                        <div
-                            key={stock.symbol}
-                            className={itemClasses}
-                            onClick={() => setSelectedStock(stock)}
-                        >
-                            <div className="flex items-start justify-between mb-2">
-                                <div>
-                                    <div className="text-sm font-semibold text-zinc-200">{stock.symbol}</div>
-                                    <div className="mt-0.5 text-[0.7rem] text-zinc-500">{stock.name}</div>
-                                </div>
-                                <div
-                                    className={`text-xs font-medium px-2 py-1 rounded ${
-                                        isPositive
-                                            ? 'text-[#5fb878] bg-[rgba(95,184,120,0.12)]'
-                                            : 'text-[#e4726f] bg-[rgba(228,114,111,0.12)]'
-                                    }`}
-                                >
-                                    {formatSignedPercent(stock.changePercent)}
-                                </div>
+            {stocks.map(stock => {
+                const isSelected = selectedStock?.symbol === stock.symbol;
+                const isPositive = stock.changePercent >= 0;
+
+                return (
+                    <div
+                        key={stock.symbol}
+                        onClick={() => setSelectedStock(stock)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            background: isSelected ? 'rgba(41,98,255,0.1)' : 'transparent',
+                            borderLeft: isSelected ? '2px solid #2962ff' : '2px solid transparent',
+                            transition: 'background 0.1s',
+                        }}
+                        onMouseEnter={e => {
+                            if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+                        }}
+                        onMouseLeave={e => {
+                            if (!isSelected) e.currentTarget.style.background = 'transparent';
+                        }}
+                    >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                color: '#ffffff',
+                                lineHeight: 1.2,
+                            }}>
+                                {stock.symbol}
                             </div>
-                            <div className="text-base font-medium text-zinc-200">
-                                {formatCurrency(stock.currentPrice)}
+                            <div style={{
+                                fontSize: '11px',
+                                color: 'var(--text-muted)',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                lineHeight: 1.3,
+                            }}>
+                                {stock.name}
                             </div>
                         </div>
-                    );
-                })}
-            </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                            <span style={{ fontSize: '13px', color: '#d1d4dc', fontWeight: 500 }}>
+                                {formatCurrency(stock.currentPrice)}
+                            </span>
+                            <span style={{
+                                fontSize: '11px',
+                                fontWeight: 500,
+                                color: isPositive ? '#26a69a' : '#ef5350',
+                                background: isPositive ? 'rgba(38,166,154,0.1)' : 'rgba(239,83,80,0.1)',
+                                padding: '1px 5px',
+                                borderRadius: '3px',
+                            }}>
+                                {isPositive ? '+' : ''}{stock.changePercent?.toFixed(2)}%
+                            </span>
+                        </div>
+                    </div>
+                );
+            })}
         </div>
     );
 };

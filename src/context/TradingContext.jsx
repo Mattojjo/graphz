@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { initializeStocks, updateStockPrice } from '../utils/stockData';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
+import { initializeStocks, updateStockTick } from '../utils/stockData';
+import { fetchCandles, fetchQuotes } from '../utils/marketData';
 import {
     INITIAL_CASH,
     buyStock as buyStockUtil,
@@ -12,7 +13,7 @@ import {
 
 const TradingContext = createContext();
 
-const PRICE_UPDATE_INTERVAL = 2000;
+const PRICE_UPDATE_INTERVAL = 500;
 const MAX_TRANSACTIONS = 50;
 const NOTIFICATION_DURATION = 3000;
 
@@ -35,22 +36,100 @@ export const TradingProvider = ({ children, initialState = {} }) => {
     const [transactions, setTransactions] = useState(initialState.transactions || []);
     const [notification, setNotification] = useState(initialState.notification || null);
     const [orders, setOrders] = useState(initialState.orders || []);
+    const [timeframe, setTimeframe] = useState('1m');
+    const [drawingTool, setDrawingTool] = useState('cursor');
+    const [chartLines, setChartLines] = useState([]);
+    const [isChartLoading, setIsChartLoading] = useState(false);
+    const [dataSource, setDataSource] = useState('simulated');
+    const timeframeRef = useRef(timeframe);
+
+    useEffect(() => {
+        timeframeRef.current = timeframe;
+    }, [timeframe]);
+
+    // Fetch real candle data from Yahoo Finance when symbol or timeframe changes
+    useEffect(() => {
+        if (!selectedStock?.symbol) return;
+
+        if (timeframe === '1s') {
+            setDataSource('simulated');
+            return;
+        }
+
+        let cancelled = false;
+        setIsChartLoading(true);
+
+        fetchCandles(selectedStock.symbol, timeframe)
+            .then(candles => {
+                if (cancelled || !candles || candles.length === 0) return;
+                setStocks(prev => prev.map(s =>
+                    s.symbol === selectedStock.symbol
+                        ? { ...s, historicalData: candles, currentPrice: candles[candles.length - 1].close }
+                        : s
+                ));
+                setSelectedStock(prev =>
+                    prev?.symbol === selectedStock.symbol
+                        ? { ...prev, historicalData: candles, currentPrice: candles[candles.length - 1].close }
+                        : prev
+                );
+                setDataSource('real');
+            })
+            .catch(err => {
+                if (!cancelled) {
+                    console.warn('[GraphZ] Yahoo Finance fetch failed, using simulation:', err.message);
+                    setDataSource('simulated');
+                }
+            })
+            .finally(() => {
+                if (!cancelled) setIsChartLoading(false);
+            });
+
+        return () => { cancelled = true; };
+    }, [selectedStock?.symbol, timeframe]);
+
+    // Poll real-time prices every 30 seconds when on real data
+    useEffect(() => {
+        if (dataSource !== 'real') return;
+
+        const poll = () => {
+            fetchQuotes(stocks.map(s => s.symbol))
+                .then(quotes => {
+                    setStocks(prev => prev.map(s => {
+                        const q = quotes[s.symbol];
+                        if (!q || q.price == null) return s;
+                        return { ...s, currentPrice: q.price, change: q.change, changePercent: q.changePercent };
+                    }));
+                })
+                .catch(() => { /* silently ignore */ });
+        };
+
+        const id = setInterval(poll, 30000);
+        return () => clearInterval(id);
+    }, [dataSource, stocks.map(s => s.symbol).join(',')]);
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setStocks(prevStocks => prevStocks.map(updateStockPrice));
+            setStocks(prevStocks =>
+                prevStocks.map(stock => updateStockTick(stock, timeframeRef.current))
+            );
         }, PRICE_UPDATE_INTERVAL);
-
         return () => clearInterval(interval);
     }, []);
 
+    // Keep selectedStock in sync with stocks array
+    useEffect(() => {
+        if (!selectedStock) return;
+        setStocks(prev => {
+            const found = prev.find(s => s.symbol === selectedStock.symbol);
+            if (found) {
+                // will be updated by the interval; no need to act here
+            }
+            return prev;
+        });
+    }, []);
+
     const createTransaction = (type, symbol, quantity, price, total) => ({
-        type,
-        symbol,
-        quantity,
-        price,
-        total,
-        timestamp: Date.now(),
+        type, symbol, quantity, price, total, timestamp: Date.now(),
     });
 
     const addTransaction = (transaction) => {
@@ -65,17 +144,12 @@ export const TradingProvider = ({ children, initialState = {} }) => {
 
     const buyStock = (symbol, quantity) => {
         const stock = stocks.find(s => s.symbol === symbol);
-        if (!stock || quantity <= 0) {
-            return false;
-        }
-
+        if (!stock || quantity <= 0) return false;
         const totalCost = stock.currentPrice * quantity;
-
         if (!canBuyStock(cash, stock.currentPrice, quantity)) {
             showNotification('Insufficient funds!', 'error');
             return false;
         }
-
         setHoldings(prev => buyStockUtil(prev, symbol, stock.currentPrice, quantity));
         setCash(prev => prev - totalCost);
         addTransaction(createTransaction('BUY', symbol, quantity, stock.currentPrice, totalCost));
@@ -85,16 +159,12 @@ export const TradingProvider = ({ children, initialState = {} }) => {
 
     const sellStock = (symbol, quantity) => {
         const stock = stocks.find(s => s.symbol === symbol);
-        if (!stock || quantity <= 0) {
-            return false;
-        }
+        if (!stock || quantity <= 0) return false;
         const currentHolding = getHoldingQuantity(holdings, symbol);
-
         if (currentHolding < quantity) {
             showNotification('Insufficient shares!', 'error');
             return false;
         }
-
         const totalValue = stock.currentPrice * quantity;
         setHoldings(prev => sellStockUtil(prev, symbol, quantity));
         setCash(prev => prev + totalValue);
@@ -103,25 +173,27 @@ export const TradingProvider = ({ children, initialState = {} }) => {
         return true;
     };
 
-    // Orders API
     const createOrder = (orderData) => {
         const id = 'order_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
         const order = {
             id,
             symbol: orderData.symbol,
-            side: orderData.side, // 'buy' | 'sell'
-            type: orderData.type || 'market', // 'market' | 'limit' | 'stop'
+            side: orderData.side,
+            type: orderData.type || 'market',
             price: orderData.price ?? null,
             quantity: orderData.quantity || 1,
             status: 'pending',
             createdAt: Date.now()
         };
         setOrders(prev => [order, ...prev]);
-
-        // Execute market orders immediately
         if (order.type === 'market') {
             const success = order.side === 'buy' ? buyStock(order.symbol, order.quantity) : sellStock(order.symbol, order.quantity);
-            setOrders(prev => prev.map(o => o.id === id ? { ...o, status: success ? 'filled' : 'rejected', filledAt: success ? Date.now() : undefined, fillPrice: success ? (stocks.find(s => s.symbol === order.symbol)?.currentPrice) : undefined } : o));
+            setOrders(prev => prev.map(o => o.id === id ? {
+                ...o,
+                status: success ? 'filled' : 'rejected',
+                filledAt: success ? Date.now() : undefined,
+                fillPrice: success ? (stocks.find(s => s.symbol === order.symbol)?.currentPrice) : undefined
+            } : o));
         }
         return id;
     };
@@ -130,7 +202,6 @@ export const TradingProvider = ({ children, initialState = {} }) => {
         setOrders(prev => prev.map(o => o.id === id ? { ...o, status: 'cancelled', cancelledAt: Date.now() } : o));
     };
 
-    // Evaluate pending limit/stop orders when prices update
     useEffect(() => {
         if (!orders.length) return;
         setOrders(prevOrders => {
@@ -162,6 +233,17 @@ export const TradingProvider = ({ children, initialState = {} }) => {
             return updated;
         });
     }, [stocks]);
+
+    const addChartLine = (price) => {
+        const id = 'line_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        setChartLines(prev => [...prev, { id, price, color: '#e4d354', label: '' }]);
+    };
+
+    const removeChartLine = (id) => {
+        setChartLines(prev => prev.filter(l => l.id !== id));
+    };
+
+    const clearChartLines = () => setChartLines([]);
 
     const portfolioValue = useMemo(
         () => calculatePortfolioValue(holdings, stocks),
@@ -202,6 +284,16 @@ export const TradingProvider = ({ children, initialState = {} }) => {
         orders,
         createOrder,
         cancelOrder,
+        timeframe,
+        setTimeframe,
+        drawingTool,
+        setDrawingTool,
+        chartLines,
+        addChartLine,
+        removeChartLine,
+        clearChartLines,
+        isChartLoading,
+        dataSource,
     };
 
     return (
